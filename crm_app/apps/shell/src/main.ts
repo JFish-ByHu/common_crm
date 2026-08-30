@@ -6,11 +6,9 @@ import App from './App.vue'
 import { registerMicroApps, start } from 'qiankun'
 import { microApps } from './micro-apps'
 import { router } from './router'
-import { setupTheme } from '../../../../packages/styles/theme'
+import { useThemeStore } from './stores/theme'
 import 'element-plus/dist/index.css'
 import '../../../../packages/styles/base.css'
-
-setupTheme()
 
 registerMicroApps(microApps, {
   beforeLoad: [
@@ -26,9 +24,12 @@ registerMicroApps(microApps, {
 })
 
 const app = createApp(App)
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
+
+useThemeStore(pinia).initialize()
 
 router.isReady().then(() => {
   app.mount('#app')

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      element-plus:
+        specifier: ^2.14.5
+        version: 2.14.5(vue@3.5.42(typescript@6.0.3))
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
@@ -72,6 +76,9 @@ importers:
 
   crm_app/apps/shell:
     dependencies:
+      '@element-plus/icons-vue':
+        specifier: ^2.3.2
+        version: 2.3.2(vue@3.5.42(typescript@6.0.3))
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)

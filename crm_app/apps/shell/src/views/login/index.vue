@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { type FormInstance, type FormRules } from 'element-plus'
+import { Moon, Sunny } from '@element-plus/icons-vue'
 import { reactive, ref } from 'vue'
+import { Message } from '../../../../../../packages/utils'
+import { useThemeStore } from '../../stores/theme'
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
+const rememberPassword = ref(false)
+const themeStore = useThemeStore()
 
 const form = reactive({
   username: '',
@@ -26,13 +31,33 @@ async function submitLogin() {
 
   window.setTimeout(() => {
     submitting.value = false
-    ElMessage.success('登录校验通过，认证接口接入后即可登录')
+    Message.success('登录校验通过，认证接口接入后即可登录')
   }, 450)
+}
+
+function forgotPassword() {
+  Message.info('请联系管理员重置密码')
+}
+
+function toggleThemeMode() {
+  themeStore.toggle()
 }
 </script>
 
 <template>
   <main class="login-page">
+    <el-button
+      class="theme-toggle"
+      :aria-label="themeStore.isDark ? '切换到亮色模式' : '切换到暗色模式'"
+      type="primary"
+      @click="toggleThemeMode"
+    >
+      <el-icon>
+        <Sunny v-if="themeStore.isDark" />
+        <Moon v-else />
+      </el-icon>
+    </el-button>
+
     <section class="login-visual" aria-label="CRM 平台介绍">
       <div class="visual-copy">
         <p class="visual-kicker">COMMON CRM</p>
@@ -55,18 +80,20 @@ async function submitLogin() {
         label-position="top"
         @submit.prevent="submitLogin"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item prop="username">
           <el-input
             v-model="form.username"
+            aria-label="用户名"
             autocomplete="username"
             placeholder="请输入用户名"
             size="large"
           />
         </el-form-item>
 
-        <el-form-item label="密码" prop="password">
+        <el-form-item prop="password">
           <el-input
             v-model="form.password"
+            aria-label="密码"
             autocomplete="current-password"
             placeholder="请输入密码"
             show-password
@@ -74,6 +101,11 @@ async function submitLogin() {
             type="password"
           />
         </el-form-item>
+
+        <div class="form-options">
+          <el-checkbox v-model="rememberPassword">记住密码</el-checkbox>
+          <el-button link type="primary" @click="forgotPassword">忘记密码</el-button>
+        </div>
 
         <el-button
           class="submit-button"
@@ -126,6 +158,26 @@ async function submitLogin() {
   pointer-events: none;
 }
 
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--crm-color-border);
+  border-radius: 50%;
+  color: var(--crm-color-primary);
+  background: var(--el-bg-color, #fff);
+  box-shadow: none;
+}
+
+.theme-toggle :deep(.el-icon) {
+  display: inline-flex;
+  font-size: 18px;
+}
+
 .visual-copy {
   position: relative;
   z-index: 1;
@@ -171,7 +223,7 @@ async function submitLogin() {
   align-items: center;
   justify-content: center;
   padding: 32px clamp(24px, 6vw, 96px);
-  background: #fff;
+  background: var(--el-bg-color, #fff);
 }
 
 .login-panel > * {
@@ -202,14 +254,7 @@ async function submitLogin() {
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 22px;
-}
-
-:deep(.el-form-item__label) {
-  padding-bottom: 8px;
-  color: var(--crm-color-text);
-  font-size: 14px;
-  font-weight: 500;
+  margin-bottom: 24px;
 }
 
 .submit-button {
@@ -229,6 +274,36 @@ async function submitLogin() {
 :deep(.el-button--primary:focus-visible) {
   border-color: var(--crm-color-primary-hover);
   background: var(--crm-color-primary-hover);
+}
+
+.theme-toggle.el-button.el-button--primary {
+  border-color: var(--crm-color-border);
+  color: var(--crm-color-primary);
+  background: var(--el-bg-color, #fff);
+}
+
+.theme-toggle.el-button.el-button--primary:hover,
+.theme-toggle.el-button.el-button--primary:focus-visible {
+  border-color: var(--crm-color-primary);
+  color: var(--crm-color-primary);
+  background: var(--crm-color-primary-soft);
+}
+
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.form-options :deep(.el-checkbox) {
+  margin-right: 0;
+}
+
+.form-options :deep(.el-button) {
+  min-height: 32px;
+  padding: 4px 0;
+  font-size: 14px;
 }
 
 .login-hint {
@@ -258,6 +333,11 @@ async function submitLogin() {
   .login-panel {
     min-height: calc(100dvh - 220px);
     padding: 24px 16px 40px;
+  }
+
+  .theme-toggle {
+    top: 16px;
+    right: 16px;
   }
 }
 </style>

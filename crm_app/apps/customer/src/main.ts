@@ -5,11 +5,8 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import { qiankunWindow, renderWithQiankun } from 'vite-plugin-qiankun/dist/helper'
 import App from './App.vue'
 import { createCustomerRouter } from './router'
-import { setupTheme } from '../../../../packages/styles/theme'
 import 'element-plus/dist/index.css'
 import '../../../../packages/styles/base.css'
-
-setupTheme()
 
 let app: VueApp<Element> | undefined
 
