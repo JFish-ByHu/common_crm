@@ -5,6 +5,7 @@ dist/
 !.env.example
 .DS_Store
 *.log
+*.tsbuildinfo
 .legacy-app-dependencies/
 .legacy-app-node-modules/
 .crm_serve_before_nest_cli/
