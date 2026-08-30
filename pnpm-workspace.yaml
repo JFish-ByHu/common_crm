@@ -1,0 +1,7 @@
+packages:
+  - crm_app/apps/*
+  - crm_serve
+  - packages/*
+allowBuilds:
+  '@parcel/watcher': false
+  unrs-resolver: false

@@ -1,0 +1,73 @@
+:root {
+  color-scheme: light;
+  --crm-color-primary: var(--el-color-primary, #409eff);
+  --crm-color-primary-hover: var(--el-color-primary-dark-2, #337ecc);
+  --crm-color-primary-soft: var(--el-color-primary-light-9, #ecf5ff);
+  --crm-color-on-primary: #ffffff;
+  --crm-color-success: var(--el-color-success, #67c23a);
+  --crm-color-warning: var(--el-color-warning, #e6a23c);
+  --crm-color-danger: var(--el-color-danger, #f56c6c);
+  --crm-color-info: var(--el-color-info, #909399);
+  --crm-color-bg: var(--el-bg-color-page, #f2f3f5);
+  --crm-color-surface: var(--el-bg-color, #ffffff);
+  --crm-color-surface-muted: var(--el-fill-color-light, #f5f7fa);
+  --crm-color-text: var(--el-text-color-primary, #303133);
+  --crm-color-text-muted: var(--el-text-color-regular, #606266);
+  --crm-color-border: var(--el-border-color, #dcdfe6);
+  --crm-color-focus: rgb(64 158 255 / 32%);
+  --crm-radius-sm: 4px;
+  --crm-radius-md: 8px;
+  --crm-radius-lg: 12px;
+  --crm-radius-xl: 16px;
+  --crm-radius-max: 16px;
+  --crm-shadow-focus: 0 0 0 3px var(--crm-color-focus);
+  --crm-transition-fast: 160ms ease;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--crm-color-bg);
+  color: var(--crm-color-text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

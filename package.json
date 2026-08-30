@@ -1,0 +1,30 @@
+{
+  "name": "common-crm",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm --parallel --stream --filter @common-crm/shell --filter @common-crm/customer --filter @common-crm/serve dev",
+    "dev:shell": "pnpm --filter @common-crm/shell dev",
+    "dev:customer": "pnpm --filter @common-crm/customer dev",
+    "dev:serve": "pnpm --filter @common-crm/serve dev",
+    "build": "pnpm -r --filter @common-crm/shell --filter @common-crm/customer --filter @common-crm/serve build",
+    "build:serve": "pnpm --filter @common-crm/serve build",
+    "test": "pnpm --filter @common-crm/serve test",
+    "typecheck": "pnpm -r --filter @common-crm/shell --filter @common-crm/customer --filter @common-crm/serve typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-vue": "^10.10.0",
+    "globals": "^17.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.20.0"
+  }
+}
