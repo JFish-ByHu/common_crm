@@ -4,6 +4,7 @@ import { Moon, Sunny } from '@element-plus/icons-vue'
 import { reactive, ref } from 'vue'
 import { Message } from '../../../../../../packages/utils'
 import { useThemeStore } from '../../stores/theme'
+import LoginAnimation from './components/LoginAnimation.vue'
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -59,6 +60,7 @@ function toggleThemeMode() {
     </el-button>
 
     <section class="login-visual" aria-label="CRM 平台介绍">
+      <LoginAnimation background-color="var(--crm-color-primary)" />
       <div class="visual-copy">
         <p class="visual-kicker">COMMON CRM</p>
         <h1>让客户关系管理更简单</h1>
@@ -139,10 +141,7 @@ function toggleThemeMode() {
   min-height: 100dvh;
   padding: clamp(32px, 6vw, 72px);
   overflow: hidden;
-  background-color: #edf6ff;
-  background-image: url('../../assets/images/login_bg.svg');
-  background-position: center;
-  background-size: cover;
+  background: #edf6ff;
 }
 
 .login-visual::after {
