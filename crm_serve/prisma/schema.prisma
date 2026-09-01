@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model CrmUser {
+  userId        String   @id @db.VarChar(64)
+  username      String   @unique(map: "uk_crm_users_username") @db.VarChar(64)
+  password      String   @db.VarChar(255)
+  email         String?  @unique(map: "uk_crm_users_email") @db.VarChar(255)
+  createTime    DateTime @default(now()) @db.DateTime(0)
+  updateTime    DateTime @default(now()) @db.DateTime(0)
+  accountStatus Int      @default(1) @db.UnsignedTinyInt
+
+  @@map("crm_users")
+}
