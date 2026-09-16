@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { type FormInstance, type FormRules } from 'element-plus'
 import { Moon, Sunny } from '@element-plus/icons-vue'
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Message } from '../../../../../../packages/utils'
 import { useThemeStore } from '../../stores/theme'
+import { useAuthStore } from '../../stores/auth'
+import { login, ApiError } from '../../services/api'
 import LoginAnimation from './components/LoginAnimation.vue'
 
+const router = useRouter()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const rememberPassword = ref(false)
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 const form = reactive({
   username: '',
@@ -21,7 +26,18 @@ const rules: FormRules<typeof form> = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
-async function submitLogin() {
+onMounted(() => {
+  // 加载记住的用户名和密码
+  if (authStore.rememberedUsername) {
+    form.username = authStore.rememberedUsername
+    rememberPassword.value = true
+  }
+  if (authStore.rememberedPassword) {
+    form.password = authStore.rememberedPassword
+  }
+})
+
+const submitLogin = async () => {
   const isFormValid = await formRef.value?.validate().catch(() => false)
 
   if (!isFormValid) {
@@ -30,17 +46,45 @@ async function submitLogin() {
 
   submitting.value = true
 
-  window.setTimeout(() => {
+  try {
+    // 调用登录接口
+    const res = await login({
+      username: form.username,
+      password: form.password
+    })
+
+    // 使用 Pinia store 保存 token
+    authStore.setTokens(res.data.accessToken, res.data.refreshToken)
+
+    // 是否记住用户名和密码
+    if (rememberPassword.value) {
+      authStore.setRememberedCredentials(form.username, form.password)
+    } else {
+      authStore.clearRememberedCredentials()
+    }
+
+    Message.success('登录成功')
+
+    // 跳转到重定向地址或客户页面
+    const redirect = router.currentRoute.value.query.redirect as string
+    router.push(redirect || '/customer')
+  } catch (error) {
+    if (error instanceof ApiError) {
+      Message.error(error.message || '登录失败')
+    } else {
+      Message.error('网络错误，请稍后重试')
+    }
+    console.error('登录失败:', error)
+  } finally {
     submitting.value = false
-    Message.success('登录校验通过，认证接口接入后即可登录')
-  }, 450)
+  }
 }
 
-function forgotPassword() {
+const forgotPassword = () => {
   Message.info('请联系管理员重置密码')
 }
 
-function toggleThemeMode() {
+const toggleThemeMode = () => {
   themeStore.toggle()
 }
 </script>

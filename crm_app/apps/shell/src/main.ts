@@ -4,11 +4,17 @@ import ElementPlus from 'element-plus'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import App from './App.vue'
 import { registerMicroApps, start } from 'qiankun'
-import { microApps } from './micro-apps'
+import { getMicroApps } from './micro-apps'
 import { router } from './router'
 import { useThemeStore } from './stores/theme'
+import { initApiClient } from './services/api'
 import 'element-plus/dist/index.css'
 import '../../../../packages/styles/base.css'
+
+// 初始化 API 客户端
+initApiClient()
+
+const microApps = getMicroApps()
 
 registerMicroApps(microApps, {
   beforeLoad: [

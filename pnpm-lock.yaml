@@ -39,6 +39,9 @@ importers:
 
   crm_app/apps/customer:
     dependencies:
+      '@common-crm/api':
+        specifier: workspace:*
+        version: link:../../../packages/api
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -76,6 +79,9 @@ importers:
 
   crm_app/apps/shell:
     dependencies:
+      '@common-crm/api':
+        specifier: workspace:*
+        version: link:../../../packages/api
       '@element-plus/icons-vue':
         specifier: ^2.3.2
         version: 2.3.2(vue@3.5.42(typescript@6.0.3))
@@ -171,6 +177,9 @@ importers:
       '@types/supertest':
         specifier: ^7.0.0
         version: 7.2.1
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       jest:
         specifier: ^30.0.0
         version: 30.5.0(@types/node@24.13.3)(supports-color@8.1.1)(ts-node@10.9.2(@types/node@24.13.3)(typescript@6.0.3))
@@ -197,6 +206,16 @@ importers:
         version: 4.2.0
       typescript:
         specifier: 6.0.3
+        version: 6.0.3
+
+  packages/api:
+    dependencies:
+      axios:
+        specifier: ^1.20.0
+        version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+    devDependencies:
+      typescript:
+        specifier: ^6.0.3
         version: 6.0.3
 
 packages:

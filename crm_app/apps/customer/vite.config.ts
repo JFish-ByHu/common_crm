@@ -8,6 +8,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8801,
     strictPort: true,
-    cors: true
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
   }
 })
