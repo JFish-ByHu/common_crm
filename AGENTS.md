@@ -10,6 +10,7 @@
 - 新业务页面遵循 `src/views/<业务名>/index.vue`、`components/`、`hooks/`、`types.ts` 的结构，参考 `src/views/login`。
 - 应用级布局遵循 `src/layout/index.vue` 作为编排入口，具体业务区域放在 `src/layout/components/`。
 - 入口文件负责路由、状态和数据流编排；可复用或职责单一的视图区域拆为组件，通过 props/emits 传递数据和事件。
+- 同一作用类型下的多个模块（例如 stores、services、hooks、utils）必须提供目录级统一入口 `index.ts`；业务代码优先从统一入口导入，避免散落引用具体实现文件。
 - 优先使用 Element Plus 组件，只有被两个或以上页面或应用复用时才提升到 `packages`。
 
 ## 修改与验证

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/login/index.vue'
 import Layout from '../layout/index.vue'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores'
 
 export const router = createRouter({
   history: createWebHistory(),

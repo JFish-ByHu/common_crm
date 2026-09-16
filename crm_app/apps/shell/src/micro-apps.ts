@@ -1,6 +1,5 @@
 import type { RegistrableApp } from 'qiankun'
-import { useAuthStore } from './stores/auth'
-import { useThemeStore } from './stores/theme'
+import { useAuthStore, useThemeStore } from './stores'
 
 export function getMicroApps(): RegistrableApp<Record<string, unknown>>[] {
   return [
