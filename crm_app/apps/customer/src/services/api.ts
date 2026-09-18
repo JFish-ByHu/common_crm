@@ -9,13 +9,16 @@ export function initApiClient() {
     timeout: 10000,
     withCredentials: true,
     getAccessToken: () => {
-      return localStorage.getItem('accessToken')
+      return localStorage.getItem('crm-access-token')
     },
     onUnauthorized: () => {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      window.location.href = '/login'
-    },
+      localStorage.removeItem('crm-access-token')
+      localStorage.removeItem('crm-refresh-token')
+      if (window.location.pathname !== '/login') {
+        const redirect = window.location.pathname + window.location.search + window.location.hash
+        window.location.replace('/login?redirect=' + encodeURIComponent(redirect))
+      }
+    }
   })
 }
 

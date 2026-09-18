@@ -2,13 +2,18 @@
 
 统一的 API 客户端封装，基于 axios，提供类型安全的接口调用。
 
+响应结构与后端 `Result` 保持一致：`{ code, data, msg }`。后端业务失败可能仍返回 HTTP 200，客户端会根据响应体中的 `code >= 400` 转换为 `ApiError`。
+
 ## 特性
 
-- ✅ **自动 Token 注入** - 请求拦截器自动添加 Bearer token
-- ✅ **统一错误处理** - 响应拦截器处理 401/403/网络错误
-- ✅ **Token 自动刷新** - Token 过期时自动刷新并重试
-- ✅ **TypeScript 类型安全** - 完整的类型定义
-- ✅ **函数式 API** - 每个接口独立导出，清晰易用
+- 自动注入最新 Bearer token，保留请求显式设置的 Authorization。
+- 区分业务错误、HTTP 错误、超时、网络错误及响应协议错误，保留原始 cause。
+- 登录请求跳过全局 401 处理；同一会话的并发 401 只处理一次，旧会话响应不会清除新会话。
+- `request<T>()` 返回 `ApiResponse<T>`；`requestRaw<T>()` 和 Axios 实例保留完整响应。
+- 保留 Axios 请求取消语义，通过 `isRequestCanceled(error)` 判断。
+- 默认显示 NProgress 顶部进度条，所有启用进度条的并发请求结束后统一收起。
+
+目前后端仅提供登录接口，没有刷新 token 接口，本包不会自动刷新或重试请求。403 表示无权限，不会触发退出登录。
 
 ## 安装
 
@@ -23,32 +28,39 @@ pnpm add @common-crm/api
 在应用入口（如 `main.ts`）初始化：
 
 ```typescript
-import { initApiClient } from './services/api'
+import { createPinia } from 'pinia'
+import { initApiClient } from './services'
+import { router } from './router'
+import '@common-crm/api/progress.css'
 
-// 初始化 API 客户端
-initApiClient()
+const pinia = createPinia()
+app.use(pinia)
+initApiClient(pinia, router)
+app.use(router)
 ```
 
 `services/api.ts` 中的配置：
 
 ```typescript
 import { initRequest } from '@common-crm/api'
-import { router } from '../router'
+import type { Pinia } from 'pinia'
+import type { Router } from 'vue-router'
+import { useAuthStore } from '../stores'
 
-export function initApiClient() {
+export function initApiClient(pinia: Pinia, router: Router) {
+  const authStore = useAuthStore(pinia)
   initRequest({
     baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
     timeout: 10000,
     withCredentials: true,
-    getAccessToken: () => localStorage.getItem('accessToken'),
-    onUnauthorized: () => {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      router.push('/login')
-    },
-    onTokenExpired: () => {
-      // 处理 token 过期逻辑
-    },
+    getAccessToken: () => authStore.accessToken,
+    onUnauthorized: async () => {
+      const currentRoute = router.currentRoute.value
+      authStore.clearTokens()
+      if (currentRoute.path !== '/login') {
+        await router.replace({ path: '/login', query: { redirect: currentRoute.fullPath } })
+      }
+    }
   })
 }
 
@@ -60,9 +72,11 @@ export * from '@common-crm/api'
 
 ```vue
 <script setup lang="ts">
-import { login } from '@/services/api'
+import { login } from '@/services'
+import { useAuthStore } from '@/stores'
 import { ref } from 'vue'
 
+const authStore = useAuthStore()
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -74,11 +88,14 @@ const handleLogin = async () => {
       username: username.value,
       password: password.value
     })
-    
+
+    if (!res.data) {
+      throw new Error(res.msg)
+    }
+
     // 保存 token
-    localStorage.setItem('accessToken', res.data.accessToken)
-    localStorage.setItem('refreshToken', res.data.refreshToken)
-    
+    authStore.setTokens(res.data.accessToken, res.data.refreshToken)
+
     console.log('登录成功', res)
   } catch (error) {
     console.error('登录失败', error)
@@ -92,11 +109,16 @@ const handleLogin = async () => {
 ### 3. 在非组件中使用
 
 ```typescript
-import { getCurrentUser } from '@common-crm/api'
+import { request } from '@common-crm/api'
 
-export async function fetchUserData() {
-  const res = await getCurrentUser()
-  return res.data
+// 示例：后端提供对应业务接口后，在 modules 中声明。
+interface Customer {
+  customerId: string
+  name: string
+}
+
+export function getCustomerById(id: string) {
+  return request<Customer>({ url: `/customer/${id}`, method: 'get' })
 }
 ```
 
@@ -105,25 +127,10 @@ export async function fetchUserData() {
 ### Auth 模块 (`auth.ts`)
 
 ```typescript
-import { login, register, logout, getCurrentUser, changePassword, refreshToken } from '@/services/api'
+import { login } from '@/services'
 
 // 登录
 const res = await login({ username, password })
-
-// 注册
-await register({ username, password, email })
-
-// 刷新 Token
-await refreshToken({ refreshToken })
-
-// 登出
-await logout()
-
-// 获取当前用户信息
-const userInfo = await getCurrentUser()
-
-// 修改密码
-await changePassword({ oldPassword, newPassword })
 ```
 
 ## 配置说明
@@ -132,30 +139,60 @@ await changePassword({ oldPassword, newPassword })
 
 ```typescript
 interface ApiClientConfig {
-  baseURL: string                    // API 基础 URL
-  timeout?: number                   // 请求超时时间（默认 10000ms）
-  withCredentials?: boolean          // 是否携带 Cookie（默认 true）
-  getAccessToken?: () => string | null  // 获取 token 的函数
-  onUnauthorized?: () => void        // 401 未授权回调
-  onTokenExpired?: () => void        // Token 过期回调
+  baseURL: string // API 基础 URL
+  timeout?: number // 默认 10000ms，0 表示不限制超时
+  withCredentials?: boolean // 是否携带 Cookie（默认 true）
+  showProgress?: boolean // 是否显示 NProgress 进度条（默认 true）
+  getAccessToken?: () => string | null // 获取 token 的函数
+  onUnauthorized?: () => void | Promise<void> // 全局会话失效处理
 }
 ```
 
-## 错误处理
+请求配置继承 Axios 配置，支持 `signal`、`params`、`headers` 等，并增加 `requiresAuth?: boolean`。默认启用鉴权，公开接口设为 `false` 时跳过自动 token 注入和全局 401 回调。内置 `login()` 已设置此选项。
 
-所有 API 调用失败时会抛出 `ApiError`：
+会话去重依据 `getAccessToken()` 返回的 token；应用应在失效回调中清理登录状态。回调失败不会覆盖原始请求错误。
+
+### 请求进度条
+
+应用入口引入一次 `@common-crm/api/progress.css`。进度条沿用 Element Plus 主题色，不显示旋转图标；无 DOM 的环境不会启动进度条。业务失败、网络错误、超时或请求取消都会结束对应请求的进度计数。
+
+客户端和单个请求都支持 `showProgress`，请求配置优先。例如轮询时关闭：
 
 ```typescript
-import { login, ApiError } from '@/services/api'
+await request({ url: '/notifications', showProgress: false })
+```
+
+### 原始响应和文件下载
+
+```typescript
+import { requestRaw } from '@common-crm/api'
+
+const response = await requestRaw<Blob>({ url: '/customer/export', responseType: 'blob' })
+const file = response.data
+const contentType = response.headers['content-type']
+```
+
+`request<T>()` 中的 `T` 表示业务 `data`，不要再次写成 `ApiResponse<T>`。业务请求会检查 `{ code, data, msg }` 外层结构；原始响应入口不要求该结构。`getAxiosInstance()` 和 `initRequest()` 返回的实例现在保留 `AxiosResponse`，访问业务响应时使用 `response.data`。
+
+## 错误处理
+
+请求失败时抛出 `ApiError`；主动取消保留 Axios 的取消错误，通常无需向用户提示：
+
+```typescript
+import { login, ApiError, isRequestCanceled } from '@/services'
 
 try {
   await login({ username, password })
 } catch (error) {
-  if (error instanceof ApiError) {
-    console.log(error.code)      // 业务错误码
-    console.log(error.status)    // HTTP 状态码
-    console.log(error.message)   // 错误消息
-    console.log(error.response)  // 原始响应数据
+  if (isRequestCanceled(error)) {
+    // 主动取消，无需提示。
+  } else if (error instanceof ApiError) {
+    console.log(error.kind) // business / http / timeout / network / protocol / unknown
+    console.log(error.code) // 业务错误码
+    console.log(error.status) // HTTP 状态码
+    console.log(error.message) // 错误消息
+    console.log(error.response) // 原始响应数据
+    console.log(error.cause) // 原始错误（如 AxiosError）
   }
 }
 ```
@@ -164,11 +201,11 @@ try {
 
 ### 1. 创建模块文件
 
-在 `packages/api/src/` 中创建新的模块文件（如 `customer.ts`）：
+在 `packages/api/src/modules/` 中创建新的模块文件（如 `customer.ts`）。下面是扩展示例，需要后端实现对应接口：
 
 ```typescript
-import type { ApiResponse, PageRequest, PageResponse } from './types'
-import { request } from './request'
+import type { ApiResponse, PageRequest, PageResponse } from '../types'
+import { request } from '../core'
 
 /**
  * 客户信息
@@ -187,7 +224,7 @@ export function getCustomerList(params: PageRequest): Promise<ApiResponse<PageRe
   return request({
     url: '/customer',
     method: 'get',
-    params,
+    params
   })
 }
 
@@ -197,7 +234,7 @@ export function getCustomerList(params: PageRequest): Promise<ApiResponse<PageRe
 export function getCustomerById(id: string): Promise<ApiResponse<Customer>> {
   return request({
     url: `/customer/${id}`,
-    method: 'get',
+    method: 'get'
   })
 }
 
@@ -208,18 +245,21 @@ export function createCustomer(data: Partial<Customer>): Promise<ApiResponse<Cus
   return request({
     url: '/customer',
     method: 'post',
-    data,
+    data
   })
 }
 
 /**
  * 更新客户
  */
-export function updateCustomer(id: string, data: Partial<Customer>): Promise<ApiResponse<Customer>> {
+export function updateCustomer(
+  id: string,
+  data: Partial<Customer>
+): Promise<ApiResponse<Customer>> {
   return request({
     url: `/customer/${id}`,
     method: 'put',
-    data,
+    data
   })
 }
 
@@ -229,7 +269,7 @@ export function updateCustomer(id: string, data: Partial<Customer>): Promise<Api
 export function deleteCustomer(id: string): Promise<ApiResponse<void>> {
   return request({
     url: `/customer/${id}`,
-    method: 'delete',
+    method: 'delete'
   })
 }
 ```
@@ -237,17 +277,15 @@ export function deleteCustomer(id: string): Promise<ApiResponse<void>> {
 ### 2. 在 index.ts 中导出
 
 ```typescript
-// packages/api/src/index.ts
-export * from './types'
+// packages/api/src/modules/index.ts
 export * from './auth'
-export * from './customer'  // 新增
-export * from './request'
+export * from './customer' // 新增
 ```
 
 ### 3. 在应用中使用
 
 ```typescript
-import { getCustomerList, createCustomer } from '@/services/api'
+import { getCustomerList, createCustomer } from '@/services'
 
 // 获取客户列表
 const res = await getCustomerList({ page: 1, pageSize: 10 })
@@ -266,14 +304,16 @@ VITE_API_BASE_URL=/api
 ## 优势对比
 
 **旧方式（对象方法）：**
+
 ```typescript
 const api = useApi()
 await api.auth.login({ username, password })
 ```
 
 **新方式（函数式）：**
+
 ```typescript
-import { login } from '@/services/api'
+import { login } from '@/services'
 await login({ username, password })
 ```
 
@@ -282,3 +322,10 @@ await login({ username, password })
 ✅ IDE 自动补全更好  
 ✅ 更容易 mock 和测试
 
+## 验证
+
+```powershell
+pnpm --filter @common-crm/api test
+pnpm --filter @common-crm/api type-check
+pnpm --filter @common-crm/shell test
+```

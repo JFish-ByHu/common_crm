@@ -5,7 +5,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Message } from '../../../../../../packages/utils'
 import { useThemeStore, useAuthStore } from '../../stores'
-import { login, ApiError } from '../../services/api'
+import { login, ApiError } from '../../services'
 import LoginAnimation from './components/LoginAnimation.vue'
 
 const router = useRouter()
@@ -51,6 +51,11 @@ const submitLogin = async () => {
       username: form.username,
       password: form.password
     })
+
+    if (!res.data) {
+      Message.error(res.msg || '登录响应无效')
+      return
+    }
 
     // 使用 Pinia store 保存 token
     authStore.setTokens(res.data.accessToken, res.data.refreshToken)

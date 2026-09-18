@@ -1,5 +1,5 @@
 import type { ApiResponse } from '../types'
-import { request } from '../core/request'
+import { request } from '../core'
 
 /**
  * 登录请求参数
@@ -21,9 +21,10 @@ export interface LoginResponse {
  * 用户登录
  */
 export function login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-  return request({
+  return request<LoginResponse, LoginRequest>({
     url: '/auth/login',
     method: 'post',
     data,
+    requiresAuth: false
   })
 }

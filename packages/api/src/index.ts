@@ -1,8 +1,15 @@
 // 核心功能导出
-export { initRequest, request, getAxiosInstance, ApiError } from './core/request'
+export * from './core'
 
 // 类型导出
-export type { ApiClientConfig, ApiResponse, PageRequest, PageResponse } from './types'
+export type {
+  ApiClientConfig,
+  ApiRequestConfig,
+  ApiErrorKind,
+  ApiResponse,
+  PageRequest,
+  PageResponse
+} from './types'
 
 // 模块导出
-export * from './modules/auth'
+export * from './modules'

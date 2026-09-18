@@ -32,20 +32,18 @@ export const router = createRouter({
 })
 
 // 全局路由守卫
-router.beforeEach((to, _from, next) => {
+router.beforeEach(to => {
   const authStore = useAuthStore()
   const requiresAuth = to.meta.requiresAuth !== false
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // 需要认证但未登录，跳转到登录页
-    next({
+    return {
       path: '/login',
       query: { redirect: to.fullPath }
-    })
+    }
   } else if (to.path === '/login' && authStore.isAuthenticated) {
     // 已登录用户访问登录页，重定向到首页
-    next('/customer')
-  } else {
-    next()
+    return '/customer'
   }
 })

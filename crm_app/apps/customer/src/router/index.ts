@@ -16,7 +16,7 @@ export function createCustomerRouter() {
   })
 
   // 子应用路由守卫
-  router.beforeEach((to, from, next) => {
+  router.beforeEach(to => {
     // 在 qiankun 环境下，认证由主应用负责
     if (qiankunWindow.__POWERED_BY_QIANKUN__) {
       const props = (window as any).__QIANKUN_PROPS__
@@ -25,10 +25,9 @@ export function createCustomerRouter() {
       if (!authState?.isAuthenticated && to.meta.requiresAuth !== false) {
         // 未认证，通知主应用跳转到登录页
         window.location.href = '/login?redirect=' + encodeURIComponent(to.fullPath)
-        return
+        return false
       }
     }
-    next()
   })
 
   return router

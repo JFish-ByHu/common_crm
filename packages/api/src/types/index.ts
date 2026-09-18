@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig } from 'axios'
+
 /**
  * API 客户端配置
  */
@@ -5,18 +7,28 @@ export interface ApiClientConfig {
   baseURL: string
   timeout?: number
   withCredentials?: boolean
-  onUnauthorized?: () => void
+  /** 是否显示请求进度条，默认 true。 */
+  showProgress?: boolean
+  onUnauthorized?: () => void | Promise<void>
   getAccessToken?: () => string | null
-  onTokenExpired?: () => void
 }
+
+export interface ApiRequestConfig<D = unknown> extends AxiosRequestConfig<D> {
+  /** 登录等公开请求设为 false，跳过自动 token 注入和全局 401 处理。 */
+  requiresAuth?: boolean
+  /** 覆盖客户端进度条配置，轮询等后台请求可设为 false。 */
+  showProgress?: boolean
+}
+
+export type ApiErrorKind = 'business' | 'http' | 'network' | 'timeout' | 'protocol' | 'unknown'
 
 /**
  * API 统一响应结构
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number
-  message: string
-  data: T
+  data: T | null
+  msg: string
 }
 
 /**

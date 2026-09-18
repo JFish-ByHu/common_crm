@@ -7,12 +7,10 @@ import { registerMicroApps, start } from 'qiankun'
 import { getMicroApps } from './micro-apps'
 import { router } from './router'
 import { useThemeStore } from './stores'
-import { initApiClient } from './services/api'
+import { initApiClient } from './services'
 import 'element-plus/dist/index.css'
+import '@common-crm/api/progress.css'
 import '../../../../packages/styles/base.css'
-
-// 初始化 API 客户端
-initApiClient()
 
 const microApps = getMicroApps()
 
@@ -32,6 +30,7 @@ registerMicroApps(microApps, {
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
+initApiClient(pinia, router)
 app.use(router)
 app.use(ElementPlus)
 
