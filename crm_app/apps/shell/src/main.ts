@@ -9,8 +9,8 @@ import { router } from './router'
 import { useThemeStore } from './stores'
 import { initApiClient } from './services'
 import 'element-plus/dist/index.css'
-import '@common-crm/api/progress.css'
-import '../../../../packages/styles/base.css'
+import '@common-crm/styles/base.css'
+import '@common-crm/styles/progress.css'
 
 const microApps = getMicroApps()
 

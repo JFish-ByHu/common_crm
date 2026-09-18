@@ -42,6 +42,9 @@ importers:
       '@common-crm/api':
         specifier: workspace:*
         version: link:../../../packages/api
+      '@common-crm/styles':
+        specifier: workspace:*
+        version: link:../../../packages/styles
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -82,6 +85,9 @@ importers:
       '@common-crm/api':
         specifier: workspace:*
         version: link:../../../packages/api
+      '@common-crm/styles':
+        specifier: workspace:*
+        version: link:../../../packages/styles
       '@element-plus/icons-vue':
         specifier: ^2.3.2
         version: 2.3.2(vue@3.5.42(typescript@6.0.3))
@@ -229,6 +235,12 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+
+  packages/styles:
+    dependencies:
+      nprogress:
+        specifier: ^0.2.0
+        version: 0.2.0
 
 packages:
 

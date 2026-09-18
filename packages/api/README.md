@@ -18,7 +18,7 @@
 ## 安装
 
 ```bash
-pnpm add @common-crm/api
+pnpm add @common-crm/api @common-crm/styles
 ```
 
 ## 使用方法
@@ -31,7 +31,7 @@ pnpm add @common-crm/api
 import { createPinia } from 'pinia'
 import { initApiClient } from './services'
 import { router } from './router'
-import '@common-crm/api/progress.css'
+import '@common-crm/styles/progress.css'
 
 const pinia = createPinia()
 app.use(pinia)
@@ -154,7 +154,7 @@ interface ApiClientConfig {
 
 ### 请求进度条
 
-应用入口引入一次 `@common-crm/api/progress.css`。进度条沿用 Element Plus 主题色，不显示旋转图标；无 DOM 的环境不会启动进度条。业务失败、网络错误、超时或请求取消都会结束对应请求的进度计数。
+应用入口引入一次 `@common-crm/styles/progress.css`。进度条沿用 Element Plus 主题色，不显示旋转图标；无 DOM 的环境不会启动进度条。业务失败、网络错误、超时或请求取消都会结束对应请求的进度计数。
 
 客户端和单个请求都支持 `showProgress`，请求配置优先。例如轮询时关闭：
 

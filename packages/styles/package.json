@@ -1,0 +1,15 @@
+{
+  "name": "@common-crm/styles",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./base.css": "./base.css",
+    "./progress.css": "./progress.css"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
+  "dependencies": {
+    "nprogress": "^0.2.0"
+  }
+}
