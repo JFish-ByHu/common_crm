@@ -4,7 +4,7 @@
 
 ```text
 apps/
-  shell/       # 主应用，端口 8800
+  alpha/       # 主应用，端口 8800
   customer/    # 客户子应用，端口 8801，激活路由 /customer
 ```
 
@@ -22,4 +22,4 @@ pnpm dev
 
 ## 新增子应用
 
-复制 `apps/customer`，更换包名、qiankun 应用名、端口和路由前缀；然后在 `apps/shell/src/micro-apps.ts` 注册其 `name`、`entry` 与 `activeRule`。主应用与子应用之间只通过 qiankun `props` 传递稳定的公共上下文，不直接共享 Pinia 实例。
+复制 `apps/customer`，更换包名、qiankun 应用名、端口和路由前缀；然后在 `apps/alpha/src/micro-apps.ts` 注册其 `name`、`entry` 与 `activeRule`。主应用与子应用之间只通过 qiankun `props` 传递稳定的公共上下文，不直接共享 Pinia 实例。

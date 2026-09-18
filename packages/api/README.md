@@ -13,7 +13,7 @@
 - 保留 Axios 请求取消语义，通过 `isRequestCanceled(error)` 判断。
 - 默认显示 NProgress 顶部进度条，所有启用进度条的并发请求结束后统一收起。
 
-目前后端仅提供登录接口，没有刷新 token 接口，本包不会自动刷新或重试请求。403 表示无权限，不会触发退出登录。
+后端提供登录、refresh token 轮换、当前用户、退出登录和修改密码接口。本包暂不自动刷新或重试请求，业务可按需要调用 `refreshTokens()`；403 表示无权限，不会触发退出登录。
 
 ## 安装
 
@@ -72,7 +72,7 @@ export * from '@common-crm/api'
 
 ```vue
 <script setup lang="ts">
-import { login } from '@/services'
+import { changePassword, getCurrentUser, login, logout, refreshTokens } from '@/services'
 import { useAuthStore } from '@/stores'
 import { ref } from 'vue'
 
@@ -131,6 +131,18 @@ import { login } from '@/services'
 
 // 登录
 const res = await login({ username, password })
+
+// 轮换 access token 和 refresh token，旧 refresh token 随即失效
+const refreshed = await refreshTokens({ refreshToken })
+
+// 当前用户
+const currentUser = await getCurrentUser()
+
+// 撤销当前 refresh session
+await logout({ refreshToken })
+
+// 修改密码后撤销该用户的所有会话
+await changePassword({ currentPassword, newPassword })
 ```
 
 ## 配置说明
@@ -327,5 +339,5 @@ await login({ username, password })
 ```powershell
 pnpm --filter @common-crm/api test
 pnpm --filter @common-crm/api type-check
-pnpm --filter @common-crm/shell test
+pnpm --filter @common-crm/alpha test
 ```

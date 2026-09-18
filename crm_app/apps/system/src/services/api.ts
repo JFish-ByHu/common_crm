@@ -1,0 +1,23 @@
+import { initRequest } from '@common-crm/api'
+
+/** 初始化系统管理子应用使用的 API 客户端。 */
+export function initApiClient() {
+  initRequest({
+    baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+    timeout: 10000,
+    withCredentials: true,
+    getAccessToken: () =>
+      window.__SYSTEM_QIANKUN_PROPS__?.getAuthState?.().accessToken ??
+      localStorage.getItem('crm-access-token'),
+    onUnauthorized: () => {
+      localStorage.removeItem('crm-access-token')
+      localStorage.removeItem('crm-refresh-token')
+      if (window.location.pathname !== '/login') {
+        const redirect = window.location.pathname + window.location.search + window.location.hash
+        window.location.replace('/login?redirect=' + encodeURIComponent(redirect))
+      }
+    }
+  })
+}
+
+export * from '@common-crm/api'

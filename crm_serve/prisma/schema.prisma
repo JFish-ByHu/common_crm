@@ -8,13 +8,29 @@ datasource db {
 }
 
 model CrmUser {
-  userId        String   @id @db.VarChar(64)
-  username      String   @unique(map: "uk_crm_users_username") @db.VarChar(64)
-  password      String   @db.VarChar(255)
-  email         String?  @unique(map: "uk_crm_users_email") @db.VarChar(255)
-  createTime    DateTime @default(now()) @db.DateTime(0)
-  updateTime    DateTime @default(now()) @db.DateTime(0)
-  accountStatus Int      @default(1) @db.UnsignedTinyInt
+  userId        String           @id @db.VarChar(64)
+  username      String           @unique(map: "uk_crm_users_username") @db.VarChar(64)
+  password      String           @db.VarChar(255)
+  email         String?          @unique(map: "uk_crm_users_email") @db.VarChar(255)
+  createTime    DateTime         @default(now()) @db.DateTime(0)
+  updateTime    DateTime         @default(now()) @db.DateTime(0)
+  accountStatus Int              @default(1) @db.UnsignedTinyInt
+  authSessions  CrmAuthSession[]
 
   @@map("crm_users")
+}
+
+model CrmAuthSession {
+  sessionId  String    @id @db.VarChar(64)
+  userId     String    @db.VarChar(64)
+  tokenHash  String    @unique(map: "uk_crm_auth_sessions_token_hash") @db.Char(64)
+  expiresAt  DateTime  @db.DateTime(0)
+  revokedAt  DateTime? @db.DateTime(0)
+  createTime DateTime  @default(now()) @db.DateTime(0)
+  updateTime DateTime  @default(now()) @updatedAt @db.DateTime(0)
+  user       CrmUser   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId], map: "idx_crm_auth_sessions_user_id")
+  @@index([expiresAt], map: "idx_crm_auth_sessions_expires_at")
+  @@map("crm_auth_sessions")
 }
