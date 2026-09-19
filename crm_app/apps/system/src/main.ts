@@ -12,6 +12,7 @@ import '@common-crm/styles/base.css'
 import '@common-crm/styles/progress.css'
 
 let app: VueApp<Element> | undefined
+let disposeRouter: (() => void) | undefined
 
 function render(props: MicroAppProps = {}) {
   setMicroAppProps(props)
@@ -19,7 +20,9 @@ function render(props: MicroAppProps = {}) {
 
   const mountPoint = props.container?.querySelector('#app') ?? '#app'
   app = createApp(App)
-  app.use(createSystemRouter())
+  const { router, dispose } = createSystemRouter()
+  disposeRouter = dispose
+  app.use(router)
   app.use(ElementPlus)
   app.mount(mountPoint)
 }
@@ -32,6 +35,8 @@ renderWithQiankun({
     render(props)
   },
   unmount() {
+    disposeRouter?.()
+    disposeRouter = undefined
     app?.unmount()
     app = undefined
     clearMicroAppProps()

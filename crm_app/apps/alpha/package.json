@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@common-crm/api": "workspace:*",
+    "@common-crm/customer": "workspace:*",
+    "@common-crm/router": "workspace:*",
     "@common-crm/styles": "workspace:*",
+    "@common-crm/system": "workspace:*",
     "@common-crm/types": "workspace:*",
     "@element-plus/icons-vue": "^2.3.2",
     "@lottiefiles/dotlottie-vue": "^0.11.27",

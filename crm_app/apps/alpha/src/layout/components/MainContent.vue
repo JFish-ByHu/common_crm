@@ -1,6 +1,17 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import MicroAppView from '../../views/micro-app/index.vue'
+
+const route = useRoute()
+const isMicroAppRoute = computed(() => Boolean(route.meta.microApp))
+</script>
+
 <template>
   <main class="content">
-    <div id="micro-app-container" class="micro-app-wrapper"></div>
+    <RouterView v-if="!isMicroAppRoute" />
+    <!-- 容器常驻，避免浏览器前进后退时 qiankun 先于 RouterView 挂载。 -->
+    <MicroAppView v-show="isMicroAppRoute" />
   </main>
 </template>
 
@@ -11,16 +22,6 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
-}
-
-.micro-app-wrapper {
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
   background: var(--crm-color-surface);
-}
-
-:global(:root[data-theme='dark']) .micro-app-wrapper {
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
 }
 </style>

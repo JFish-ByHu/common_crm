@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./manifest": "./src/micro-app/manifest.ts"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
@@ -10,6 +13,8 @@
   },
   "dependencies": {
     "@common-crm/api": "workspace:*",
+    "@common-crm/components": "workspace:*",
+    "@common-crm/router": "workspace:*",
     "@common-crm/styles": "workspace:*",
     "@common-crm/types": "workspace:*",
     "@element-plus/icons-vue": "^2.3.2",

@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { UserFilterBar, UserTable } from './components'
+import { ref } from 'vue'
+import { CrmFilterBar, CrmTable } from '@common-crm/components'
+import { UserDetails } from './components'
+import { userActions, userColumns, userFilterFields } from './config'
 import { useUserList } from './hooks'
-import type { UserFilters } from './types'
+import type { UserListItem } from './types'
 
-const { filters, visibleUsers, applyFilters, resetFilters } = useUserList()
+const { filters, visibleUsers, currentPage, pageSize, applyFilters, resetFilters } = useUserList()
+const detailsVisible = ref(false)
+const selectedUser = ref<UserListItem | null>(null)
 
-const updateFilters = (value: UserFilters) => {
-  Object.assign(filters, value)
+function handleAction(key: string, row: UserListItem) {
+  if (key === 'view') {
+    selectedUser.value = row
+    detailsVisible.value = true
+  }
 }
 </script>
 
@@ -19,21 +27,35 @@ const updateFilters = (value: UserFilters) => {
       </div>
     </header>
 
-    <UserFilterBar
-      :model-value="filters"
-      @update:model-value="updateFilters"
+    <CrmFilterBar
+      v-model="filters"
+      :fields="userFilterFields"
       @search="applyFilters"
       @reset="resetFilters"
     />
-
-    <div class="table-region">
-      <UserTable :users="visibleUsers" />
-    </div>
+    <CrmTable
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :data="visibleUsers"
+      :columns="userColumns"
+      :actions="userActions"
+      row-key="userId"
+      empty-text="暂无用户数据"
+      @action="handleAction"
+    >
+      <template #status="{ row }">
+        <el-tag :type="row.status === 'active' ? 'success' : 'info'" effect="plain">
+          {{ row.status === 'active' ? '正常' : '停用' }}
+        </el-tag>
+      </template>
+    </CrmTable>
+    <UserDetails v-model="detailsVisible" :user="selectedUser" />
   </section>
 </template>
 
 <style scoped>
 .user-management {
+  min-width: 0;
   min-height: calc(100vh - 64px);
   padding: 24px;
   background: var(--crm-color-surface);
@@ -57,11 +79,6 @@ const updateFilters = (value: UserFilters) => {
   margin-top: 4px;
   color: var(--crm-color-text-muted);
   font-size: 14px;
-}
-
-.table-region {
-  padding-top: 16px;
-  overflow-x: auto;
 }
 
 @media (max-width: 720px) {

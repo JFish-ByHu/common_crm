@@ -2,7 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/login/index.vue'
 import Layout from '../layout/index.vue'
 import DashboardView from '../views/dashboard/index.vue'
+import MicroAppView from '../views/micro-app/index.vue'
 import { useAuthStore } from '../stores'
+import { microAppModules } from '../micro-apps'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -28,10 +30,15 @@ export const router = createRouter({
           component: DashboardView,
           meta: { requiresAuth: true, title: '控制台' }
         },
+        ...microAppModules.map(({ manifest }) => ({
+          path: `${manifest.basePath.slice(1)}/:pathMatch(.*)*`,
+          name: `micro-app-${manifest.name}`,
+          component: MicroAppView,
+          meta: { requiresAuth: true, title: manifest.title, microApp: manifest.name }
+        })),
         {
           path: ':pathMatch(.*)*',
-          component: () => import('../views/micro-app/index.vue'),
-          meta: { requiresAuth: true }
+          redirect: '/dashboard'
         }
       ]
     }

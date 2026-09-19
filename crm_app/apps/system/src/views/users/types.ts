@@ -1,3 +1,5 @@
+import type { FilterDateRange } from '@common-crm/components'
+
 export type UserStatus = 'active' | 'disabled'
 
 export interface UserListItem {
@@ -11,4 +13,5 @@ export interface UserListItem {
 export interface UserFilters {
   keyword: string
   status: UserStatus | ''
+  updatedAt: FilterDateRange
 }

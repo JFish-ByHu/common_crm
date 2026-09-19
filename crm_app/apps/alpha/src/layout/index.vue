@@ -1,66 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { DataAnalysis, Odometer, Setting, TrendCharts, User } from '@element-plus/icons-vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Message } from '../../../../../packages/utils'
 import { useAuthStore, useThemeStore } from '../stores'
-import {
-  HeaderBar,
-  MainContent,
-  Sidebar,
-  type BreadcrumbItem,
-  type LayoutMenuItem
-} from './components'
+import { HeaderBar, MainContent, Sidebar } from './components'
+import { useLayoutNavigation } from './hooks'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
 const collapsed = ref(false)
-const activeMenu = computed(() => {
-  const path = route.path
-  if (path.startsWith('/dashboard')) return '/dashboard'
-  if (path.startsWith('/customer')) return '/customer'
-  if (path.startsWith('/sales')) return '/sales'
-  if (path.startsWith('/reports')) return '/reports'
-  if (path.startsWith('/system')) return '/system/users'
-  return path
-})
-
-const menuItems: LayoutMenuItem[] = [
-  { path: '/dashboard', title: '控制台', icon: Odometer },
-  { path: '/customer', title: '客户管理', icon: User },
-  { path: '/sales', title: '销售管理', icon: TrendCharts, disabled: true },
-  { path: '/reports', title: '数据报表', icon: DataAnalysis, disabled: true },
-  { path: '/system/users', title: '系统管理', icon: Setting }
-]
-
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
-  const path = route.path
-
-  if (path.startsWith('/dashboard')) {
-    return [{ title: '控制台' }]
-  }
-
-  if (path.startsWith('/customer')) {
-    return [{ title: '控制台', to: '/' }, { title: '客户管理' }]
-  }
-
-  if (path.startsWith('/sales')) {
-    return [{ title: '控制台', to: '/' }, { title: '销售管理' }]
-  }
-
-  if (path.startsWith('/reports')) {
-    return [{ title: '控制台', to: '/' }, { title: '数据报表' }]
-  }
-
-  if (path.startsWith('/system')) {
-    return [{ title: '控制台', to: '/' }, { title: '系统管理' }, { title: '用户管理' }]
-  }
-
-  return [{ title: (route.meta.title as string) || '控制台' }]
-})
+const { menuItems, activeMenu, breadcrumbItems } = useLayoutNavigation()
 
 const handleMenuSelect = (path: string) => {
   router.push(path)

@@ -12,7 +12,7 @@ import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@common-crm/styles/base.css'
 import '@common-crm/styles/progress.css'
 
-const microApps = getMicroApps()
+const microApps = getMicroApps(router)
 
 registerMicroApps(microApps, {
   beforeLoad: [

@@ -1,18 +1,37 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
 import type { Component } from 'vue'
 
 export interface LayoutMenuItem {
   path: string
   title: string
-  icon: Component
+  icon?: Component
   disabled?: boolean
+  children?: LayoutMenuItem[]
 }
 
-defineProps<{
+const props = defineProps<{
   collapsed: boolean
   activeMenu: string
   items: LayoutMenuItem[]
 }>()
+
+const defaultOpeneds = props.items
+  .filter(item => item.children?.some(child => child.path === props.activeMenu))
+  .map(item => item.path)
+
+const menuRef = ref<{ open: (index: string) => void }>()
+
+watch(
+  () => props.activeMenu,
+  activePath => {
+    const parent = props.items.find(item => item.children?.some(child => child.path === activePath))
+    if (parent) {
+      void nextTick(() => menuRef.value?.open(parent.path))
+    }
+  },
+  { immediate: true }
+)
 
 const emit = defineEmits<{
   select: [path: string]
@@ -30,25 +49,46 @@ const emit = defineEmits<{
 
     <nav class="sidebar-nav">
       <el-menu
+        ref="menuRef"
         :default-active="activeMenu"
+        :default-openeds="defaultOpeneds"
         :collapse="collapsed"
-        :collapse-transition="false"
         @select="emit('select', $event)"
       >
-        <el-menu-item
-          v-for="item in items"
-          :key="item.path"
-          :index="item.path"
-          :disabled="item.disabled"
-        >
-          <el-icon>
-            <component :is="item.icon" />
-          </el-icon>
-          <template #title>
-            <span>{{ item.title }}</span>
-            <el-tag v-if="item.disabled" size="small" type="info" class="menu-tag">敬请期待</el-tag>
-          </template>
-        </el-menu-item>
+        <template v-for="item in items" :key="item.path">
+          <el-sub-menu v-if="item.children?.length" :index="item.path" :disabled="item.disabled">
+            <template #title>
+              <el-icon v-if="item.icon">
+                <component :is="item.icon" />
+              </el-icon>
+              <span>{{ item.title }}</span>
+              <el-tag v-if="item.disabled" size="small" type="info" class="menu-tag">
+                敬请期待
+              </el-tag>
+            </template>
+
+            <el-menu-item
+              v-for="child in item.children"
+              :key="child.path"
+              :index="child.path"
+              :disabled="child.disabled"
+            >
+              <span>{{ child.title }}</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-menu-item v-else :index="item.path" :disabled="item.disabled">
+            <el-icon v-if="item.icon">
+              <component :is="item.icon" />
+            </el-icon>
+            <template #title>
+              <span>{{ item.title }}</span>
+              <el-tag v-if="item.disabled" size="small" type="info" class="menu-tag">
+                敬请期待
+              </el-tag>
+            </template>
+          </el-menu-item>
+        </template>
       </el-menu>
     </nav>
   </aside>
@@ -91,6 +131,7 @@ const emit = defineEmits<{
   justify-content: center;
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   border-radius: 8px;
   background: linear-gradient(
     135deg,
@@ -100,7 +141,6 @@ const emit = defineEmits<{
   color: #fff;
   font-size: 18px;
   font-weight: 700;
-  flex-shrink: 0;
 }
 
 .logo-text {
@@ -112,37 +152,8 @@ const emit = defineEmits<{
 .sidebar-nav {
   flex: 1;
   padding: 16px 0;
-  overflow-y: auto;
   overflow-x: hidden;
-}
-
-.sidebar-nav :deep(.el-menu) {
-  border-right: none;
-  background: transparent;
-}
-
-.sidebar-nav :deep(.el-menu-item) {
-  height: 48px;
-  margin: 4px 12px;
-  border-radius: 8px;
-  line-height: 48px;
-}
-
-.sidebar-nav :deep(.el-menu-item.is-active) {
-  background: var(--crm-color-primary-soft);
-  color: var(--crm-color-primary);
-}
-
-.sidebar-nav :deep(.el-menu-item:hover) {
-  background: var(--crm-color-surface-muted);
-}
-
-.sidebar-nav :deep(.el-menu-item.is-active:hover) {
-  background: var(--crm-color-primary-soft);
-}
-
-.sidebar-nav :deep(.el-menu-item .el-icon) {
-  font-size: 18px;
+  overflow-y: auto;
 }
 
 .menu-tag {
@@ -151,23 +162,6 @@ const emit = defineEmits<{
 
 .sidebar.is-collapsed {
   width: 64px;
-}
-
-.sidebar.is-collapsed .sidebar-nav :deep(.el-menu-item) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 4px 8px;
-  padding: 0 !important;
-}
-
-.sidebar.is-collapsed .sidebar-nav :deep(.el-menu-tooltip__trigger) {
-  justify-content: center;
-  padding: 0;
-}
-
-.sidebar.is-collapsed .sidebar-nav :deep(.el-menu-item .el-icon) {
-  margin-right: 0 !important;
 }
 
 :global(:root[data-theme='dark']) .sidebar {

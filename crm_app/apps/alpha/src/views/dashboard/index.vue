@@ -24,7 +24,7 @@ const dashboardSections = [
     description: '查看平台用户、账号状态和系统基础配置。',
     icon: Setting,
     actionText: '进入系统管理',
-    path: '/system/users'
+    path: '/system'
   }
 ]
 

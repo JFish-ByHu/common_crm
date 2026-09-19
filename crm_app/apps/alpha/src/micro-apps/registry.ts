@@ -1,10 +1,13 @@
 import type { MicroAppProps } from '@common-crm/types'
 import type { RegistrableApp } from 'qiankun'
+import type { Router } from 'vue-router'
+import { createMicroAppNavigation, matchesMicroAppPath } from '@common-crm/router'
 import { useAuthStore, useThemeStore } from '../stores'
 import { createMicroAppEventBus } from './event-bus'
+import { microAppModules } from './modules'
 
 /** 获取 alpha 基座注册的业务子应用。 */
-export function getMicroApps(): RegistrableApp<MicroAppProps>[] {
+export function getMicroApps(router: Router): RegistrableApp<MicroAppProps>[] {
   const eventBus = createMicroAppEventBus()
   const sharedProps: MicroAppProps = {
     appName: 'Common CRM',
@@ -25,20 +28,11 @@ export function getMicroApps(): RegistrableApp<MicroAppProps>[] {
     eventBus
   }
 
-  return [
-    {
-      name: 'customer',
-      entry: import.meta.env.VITE_CUSTOMER_ENTRY ?? 'http://localhost:8801',
-      container: '#micro-app-container',
-      activeRule: '/customer',
-      props: sharedProps
-    },
-    {
-      name: 'system',
-      entry: import.meta.env.VITE_SYSTEM_ENTRY ?? 'http://localhost:8802',
-      container: '#micro-app-container',
-      activeRule: '/system',
-      props: sharedProps
-    }
-  ]
+  return microAppModules.map(({ manifest, entry }) => ({
+    name: manifest.name,
+    entry,
+    container: '#micro-app-container',
+    activeRule: location => matchesMicroAppPath(location.pathname, manifest.basePath),
+    props: { ...sharedProps, navigation: createMicroAppNavigation(router, manifest.basePath) }
+  }))
 }

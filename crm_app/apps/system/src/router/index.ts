@@ -1,29 +1,30 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createMicroAppRouter } from '@common-crm/router'
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
-import { getMicroAppProps } from '../micro-app'
+import { getMicroAppProps, systemManifest, systemPages } from '../micro-app'
 
 export function createSystemRouter() {
-  const router = createRouter({
-    history: createWebHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/system' : '/'),
+  const result = createMicroAppRouter({
+    basePath: systemManifest.basePath,
+    navigation: getMicroAppProps().navigation,
     routes: [
       {
         path: '/',
-        redirect: '/users'
+        redirect: systemPages.users.path
       },
       {
-        path: '/users',
+        path: systemPages.users.path,
         name: 'system-users',
         component: () => import('../views/users/index.vue'),
-        meta: { requiresAuth: true, title: '用户管理' }
+        meta: { requiresAuth: true, title: systemPages.users.title }
       },
       {
         path: '/:pathMatch(.*)*',
-        redirect: '/users'
+        redirect: systemPages.users.path
       }
     ]
   })
 
-  router.beforeEach(to => {
+  result.router.beforeEach(to => {
     if (!qiankunWindow.__POWERED_BY_QIANKUN__) return
 
     const authState = getMicroAppProps().getAuthState?.()
@@ -34,5 +35,5 @@ export function createSystemRouter() {
     }
   })
 
-  return router
+  return result
 }

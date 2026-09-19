@@ -1,25 +1,26 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createMicroAppRouter } from '@common-crm/router'
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
-import { getMicroAppProps } from '../micro-app'
+import { customerManifest, customerPages, getMicroAppProps } from '../micro-app'
 
 export function createCustomerRouter() {
-  const router = createRouter({
-    history: createWebHistory(qiankunWindow.__POWERED_BY_QIANKUN__ ? '/customer' : '/'),
+  const result = createMicroAppRouter({
+    basePath: customerManifest.basePath,
+    navigation: getMicroAppProps().navigation,
     routes: [
       {
-        path: '/',
+        path: customerPages.list.path,
         name: 'customer-list',
         component: () => import('../views/customers/index.vue'),
-        meta: { requiresAuth: true, title: '客户管理' }
+        meta: { requiresAuth: true, title: customerPages.list.title }
       },
       {
         path: '/:pathMatch(.*)*',
-        redirect: '/'
+        redirect: customerPages.list.path
       }
     ]
   })
 
-  router.beforeEach(to => {
+  result.router.beforeEach(to => {
     if (!qiankunWindow.__POWERED_BY_QIANKUN__) return
 
     const authState = getMicroAppProps().getAuthState?.()
@@ -30,5 +31,5 @@ export function createCustomerRouter() {
     }
   })
 
-  return router
+  return result
 }

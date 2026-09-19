@@ -1,0 +1,30 @@
+{
+  "name": "@common-crm/components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./table": "./src/table/index.ts",
+    "./filter": "./src/filter/index.ts"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2"
+  },
+  "peerDependencies": {
+    "element-plus": "^2.14.5",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@vue/tsconfig": "^0.9.0",
+    "element-plus": "^2.14.5",
+    "typescript": "6.0.3",
+    "vue": "^3.5.42",
+    "vue-tsc": "^3.3.11"
+  }
+}
