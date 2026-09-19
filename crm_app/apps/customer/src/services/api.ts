@@ -1,16 +1,16 @@
 import { initRequest } from '@common-crm/api'
+import { getMicroAppProps } from '../micro-app'
 
 /**
- * 初始化 API 客户端（用于独立运行模式）
+ * 初始化客户管理子应用使用的 API 客户端。
  */
 export function initApiClient() {
   initRequest({
     baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
     timeout: 10000,
     withCredentials: true,
-    getAccessToken: () => {
-      return localStorage.getItem('crm-access-token')
-    },
+    getAccessToken: () =>
+      getMicroAppProps().getAuthState?.().accessToken ?? localStorage.getItem('crm-access-token'),
     onUnauthorized: () => {
       localStorage.removeItem('crm-access-token')
       localStorage.removeItem('crm-refresh-token')
@@ -22,5 +22,4 @@ export function initApiClient() {
   })
 }
 
-// 导出所有 API 方法，方便使用
 export * from '@common-crm/api'

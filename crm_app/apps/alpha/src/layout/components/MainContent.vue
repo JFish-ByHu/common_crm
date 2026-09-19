@@ -6,11 +6,16 @@
 
 <style scoped>
 .content {
-  flex: 1;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
 }
 
 .micro-app-wrapper {
+  width: 100%;
+  min-width: 0;
   min-height: 100%;
   background: var(--crm-color-surface);
 }

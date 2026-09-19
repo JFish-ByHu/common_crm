@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
 import qiankun from 'vite-plugin-qiankun'
 
 export default defineConfig({
@@ -11,6 +11,12 @@ export default defineConfig({
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*'
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      }
     }
   }
 })

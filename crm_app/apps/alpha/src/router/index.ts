@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/login/index.vue'
 import Layout from '../layout/index.vue'
+import DashboardView from '../views/dashboard/index.vue'
 import { useAuthStore } from '../stores'
 
 export const router = createRouter({
@@ -8,7 +9,7 @@ export const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/customer'
+      redirect: '/dashboard'
     },
     {
       path: '/login',
@@ -22,8 +23,14 @@ export const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         {
+          path: 'dashboard',
+          name: 'dashboard',
+          component: DashboardView,
+          meta: { requiresAuth: true, title: '控制台' }
+        },
+        {
           path: ':pathMatch(.*)*',
-          component: () => import('../views/MicroAppHost.vue'),
+          component: () => import('../views/micro-app/index.vue'),
           meta: { requiresAuth: true }
         }
       ]
@@ -44,6 +51,6 @@ router.beforeEach(to => {
     }
   } else if (to.path === '/login' && authStore.isAuthenticated) {
     // 已登录用户访问登录页，重定向到首页
-    return '/customer'
+    return '/dashboard'
   }
 })

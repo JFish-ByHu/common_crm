@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { DataAnalysis, Setting, TrendCharts, User } from '@element-plus/icons-vue'
+import { DataAnalysis, Odometer, Setting, TrendCharts, User } from '@element-plus/icons-vue'
 import { Message } from '../../../../../packages/utils'
 import { useAuthStore, useThemeStore } from '../stores'
-import HeaderBar, { type BreadcrumbItem } from './components/HeaderBar.vue'
-import MainContent from './components/MainContent.vue'
-import Sidebar, { type LayoutMenuItem } from './components/Sidebar.vue'
+import {
+  HeaderBar,
+  MainContent,
+  Sidebar,
+  type BreadcrumbItem,
+  type LayoutMenuItem
+} from './components'
 
 const router = useRouter()
 const route = useRoute()
@@ -16,6 +20,7 @@ const themeStore = useThemeStore()
 const collapsed = ref(false)
 const activeMenu = computed(() => {
   const path = route.path
+  if (path.startsWith('/dashboard')) return '/dashboard'
   if (path.startsWith('/customer')) return '/customer'
   if (path.startsWith('/sales')) return '/sales'
   if (path.startsWith('/reports')) return '/reports'
@@ -24,6 +29,7 @@ const activeMenu = computed(() => {
 })
 
 const menuItems: LayoutMenuItem[] = [
+  { path: '/dashboard', title: '控制台', icon: Odometer },
   { path: '/customer', title: '客户管理', icon: User },
   { path: '/sales', title: '销售管理', icon: TrendCharts, disabled: true },
   { path: '/reports', title: '数据报表', icon: DataAnalysis, disabled: true },
@@ -32,6 +38,10 @@ const menuItems: LayoutMenuItem[] = [
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
   const path = route.path
+
+  if (path.startsWith('/dashboard')) {
+    return [{ title: '控制台' }]
+  }
 
   if (path.startsWith('/customer')) {
     return [{ title: '控制台', to: '/' }, { title: '客户管理' }]
@@ -61,18 +71,38 @@ const handleLogout = () => {
   router.push('/login')
   Message.success('已退出登录')
 }
+
+const handleSidebarToggle = () => {
+  collapsed.value = !collapsed.value
+  window.dispatchEvent(new Event('resize'))
+}
+
+const handleLayoutTransitionEnd = (event: TransitionEvent) => {
+  if (event.propertyName === 'margin-left') {
+    window.dispatchEvent(new Event('resize'))
+  }
+}
 </script>
 
 <template>
   <div class="admin-layout" :class="{ 'is-collapsed': collapsed }">
-    <Sidebar :collapsed="collapsed" :active-menu="activeMenu" :items="menuItems" @select="handleMenuSelect" />
+    <Sidebar
+      :collapsed="collapsed"
+      :active-menu="activeMenu"
+      :items="menuItems"
+      @select="handleMenuSelect"
+    />
 
-    <div class="main-container" :class="{ 'is-collapsed': collapsed }">
+    <div
+      class="main-container"
+      :class="{ 'is-collapsed': collapsed }"
+      @transitionend="handleLayoutTransitionEnd"
+    >
       <HeaderBar
         :breadcrumb-items="breadcrumbItems"
         :is-dark="themeStore.isDark"
         @logout="handleLogout"
-        @toggle-sidebar="collapsed = !collapsed"
+        @toggle-sidebar="handleSidebarToggle"
         @toggle-theme="themeStore.toggle()"
       />
       <MainContent />
@@ -83,15 +113,23 @@ const handleLogout = () => {
 <style scoped>
 .admin-layout {
   display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100dvh;
   min-height: 100vh;
+  overflow: hidden;
   background: var(--crm-color-bg);
 }
 
 .main-container {
   display: flex;
-  flex: 1;
+  flex: 1 1 0;
   flex-direction: column;
+  width: 0;
+  min-width: 0;
+  min-height: 0;
   margin-left: 240px;
+  overflow: hidden;
   transition: margin-left 0.28s ease;
 }
 

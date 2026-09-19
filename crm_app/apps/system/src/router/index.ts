@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
+import { getMicroAppProps } from '../micro-app'
 
 export function createSystemRouter() {
   const router = createRouter({
@@ -25,9 +26,10 @@ export function createSystemRouter() {
   router.beforeEach(to => {
     if (!qiankunWindow.__POWERED_BY_QIANKUN__) return
 
-    const authState = window.__SYSTEM_QIANKUN_PROPS__?.getAuthState?.()
+    const authState = getMicroAppProps().getAuthState?.()
     if (!authState?.isAuthenticated && to.meta.requiresAuth !== false) {
-      window.location.href = '/login?redirect=' + encodeURIComponent(to.fullPath)
+      const redirect = window.location.pathname + window.location.search + window.location.hash
+      window.location.replace('/login?redirect=' + encodeURIComponent(redirect))
       return false
     }
   })

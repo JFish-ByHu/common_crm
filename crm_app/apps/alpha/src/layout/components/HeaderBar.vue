@@ -35,11 +35,7 @@ const emit = defineEmits<{
       </el-button>
       <div class="breadcrumb">
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item
-            v-for="item in breadcrumbItems"
-            :key="item.title"
-            :to="item.to"
-          >
+          <el-breadcrumb-item v-for="item in breadcrumbItems" :key="item.title" :to="item.to">
             {{ item.title }}
           </el-breadcrumb-item>
         </el-breadcrumb>

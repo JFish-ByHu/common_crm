@@ -69,9 +69,9 @@ const submitLogin = async () => {
 
     Message.success('登录成功')
 
-    // 跳转到重定向地址或客户页面
+    // 跳转到重定向地址或控制台
     const redirect = router.currentRoute.value.query.redirect as string
-    router.push(redirect || '/customer')
+    router.push(redirect || '/dashboard')
   } catch (error) {
     if (error instanceof ApiError) {
       Message.error(error.message || '登录失败')

@@ -46,9 +46,7 @@ const emit = defineEmits<{
           </el-icon>
           <template #title>
             <span>{{ item.title }}</span>
-            <el-tag v-if="item.disabled" size="small" type="info" class="menu-tag"
-              >敬请期待</el-tag
-            >
+            <el-tag v-if="item.disabled" size="small" type="info" class="menu-tag">敬请期待</el-tag>
           </template>
         </el-menu-item>
       </el-menu>

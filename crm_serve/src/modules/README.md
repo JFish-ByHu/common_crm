@@ -1,17 +1,37 @@
 # 后端模块结构
 
-`src/modules` 按限界上下文组织业务模块。每个模块使用相同的依赖方向：
+业务代码按 Nest 模块组织，每个模块采用直接、固定的调用关系：
 
 ```text
-presentation -> application -> domain
-infrastructure -> application/domain
+Controller -> Service -> Repository / 专用技术服务 -> Prisma / 外部能力
 ```
 
-- `domain`：实体、值对象和仓储契约，不依赖 Nest、Prisma、JWT 或 HTTP。
-- `application`：业务用例、输入输出契约和外部能力端口。
-- `infrastructure`：Prisma、JWT、密码摘要等端口实现。
-- `presentation/http`：Controller、DTO、Guard 和响应转换。
-- `<module>.module.ts`：模块内部依赖装配。
+以 IAM 认证模块为例：
 
-应用级 `src/app` 只负责加载配置、共享基础设施和业务模块。跨模块通用的技术能力放在
-`src/shared`，业务规则仍由对应限界上下文持有。
+```text
+modules/iam/
+├── iam.module.ts
+└── auth/
+    ├── auth.controller.ts
+    ├── auth.service.ts
+    ├── auth-token.service.ts
+    ├── user.repository.ts
+    ├── auth-session.repository.ts
+    ├── auth-result.presenter.ts
+    ├── dto/
+    ├── guards/
+    ├── decorators/
+    ├── types.ts
+    └── index.ts
+```
+
+- `controller`：声明路由、接收 DTO、调用业务服务并返回响应。
+- `service`：编排业务规则和事务边界，不直接编写 SQL 或 Prisma 查询。
+- `repository`：封装 Prisma 查询和持久化事务。
+- 专用技术服务：封装 JWT、文件存储等有明确职责的技术能力。
+- `dto`、`guards`、`decorators`：仅服务当前业务模块时就近放置。
+- `common`：跨业务模块复用的 HTTP 响应等通用代码。
+- `database`：Prisma 等数据库基础设施。
+
+新增业务时优先保持这一层级。只有模块的业务复杂度确实增长到需要独立领域模型时，
+才在该模块内部增加更细的领域分层。

@@ -6,15 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "typecheck": "vue-tsc -b --pretty false",
-    "test": "node --import tsx --test test/*.test.ts"
+    "typecheck": "vue-tsc -b --pretty false"
   },
   "dependencies": {
     "@common-crm/api": "workspace:*",
     "@common-crm/styles": "workspace:*",
+    "@common-crm/types": "workspace:*",
     "@element-plus/icons-vue": "^2.3.2",
     "@lottiefiles/dotlottie-vue": "^0.11.27",
-    "axios": "^1.20.0",
     "element-plus": "^2.14.5",
     "pinia": "^4.0.3",
     "qiankun": "^2.10.16",
@@ -24,7 +23,6 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/tsconfig": "^0.9.0",
-    "tsx": "^4.23.13",
     "typescript": "6.0.3",
     "vite": "^8.2.2",
     "vue-tsc": "^3.3.11"

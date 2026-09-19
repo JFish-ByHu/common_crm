@@ -1,4 +1,5 @@
 import { initRequest } from '@common-crm/api'
+import { getMicroAppProps } from '../micro-app'
 
 /** 初始化系统管理子应用使用的 API 客户端。 */
 export function initApiClient() {
@@ -7,8 +8,7 @@ export function initApiClient() {
     timeout: 10000,
     withCredentials: true,
     getAccessToken: () =>
-      window.__SYSTEM_QIANKUN_PROPS__?.getAuthState?.().accessToken ??
-      localStorage.getItem('crm-access-token'),
+      getMicroAppProps().getAuthState?.().accessToken ?? localStorage.getItem('crm-access-token'),
     onUnauthorized: () => {
       localStorage.removeItem('crm-access-token')
       localStorage.removeItem('crm-refresh-token')

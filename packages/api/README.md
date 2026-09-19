@@ -339,5 +339,4 @@ await login({ username, password })
 ```powershell
 pnpm --filter @common-crm/api test
 pnpm --filter @common-crm/api type-check
-pnpm --filter @common-crm/alpha test
 ```
