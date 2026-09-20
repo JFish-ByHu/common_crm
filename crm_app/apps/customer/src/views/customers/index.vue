@@ -20,14 +20,7 @@ function handleAction(key: string, row: CustomerListItem) {
 </script>
 
 <template>
-  <section class="customer-management" aria-labelledby="customer-management-title">
-    <header class="page-header">
-      <div>
-        <h1 id="customer-management-title">客户管理</h1>
-        <p>管理客户档案和联系人信息</p>
-      </div>
-    </header>
-
+  <section class="customer-management" aria-label="客户管理">
     <CrmFilterBar
       v-model="filters"
       :fields="customerFilterFields"
@@ -54,26 +47,6 @@ function handleAction(key: string, row: CustomerListItem) {
   min-height: calc(100vh - 64px);
   padding: 24px;
   background: var(--crm-color-surface);
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-}
-
-.page-header h1 {
-  color: var(--crm-color-text);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.page-header p {
-  margin-top: 4px;
-  color: var(--crm-color-text-muted);
-  font-size: 14px;
 }
 
 @media (max-width: 720px) {

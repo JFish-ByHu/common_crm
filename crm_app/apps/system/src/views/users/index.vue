@@ -19,14 +19,7 @@ function handleAction(key: string, row: UserListItem) {
 </script>
 
 <template>
-  <section class="user-management" aria-labelledby="user-management-title">
-    <header class="page-header">
-      <div>
-        <h1 id="user-management-title">用户管理</h1>
-        <p>管理平台账号及账号状态</p>
-      </div>
-    </header>
-
+  <section class="user-management" aria-label="用户管理">
     <CrmFilterBar
       v-model="filters"
       :fields="userFilterFields"
@@ -59,26 +52,6 @@ function handleAction(key: string, row: UserListItem) {
   min-height: calc(100vh - 64px);
   padding: 24px;
   background: var(--crm-color-surface);
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-}
-
-.page-header h1 {
-  color: var(--crm-color-text);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.page-header p {
-  margin-top: 4px;
-  color: var(--crm-color-text-muted);
-  font-size: 14px;
 }
 
 @media (max-width: 720px) {
