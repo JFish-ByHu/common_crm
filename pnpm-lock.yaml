@@ -57,6 +57,9 @@ importers:
       '@common-crm/types':
         specifier: workspace:*
         version: link:../../../packages/types
+      '@common-crm/utils':
+        specifier: workspace:*
+        version: link:../../../packages/utils
       '@element-plus/icons-vue':
         specifier: ^2.3.2
         version: 2.3.2(vue@3.5.42(typescript@6.0.3))
@@ -158,6 +161,9 @@ importers:
       '@common-crm/types':
         specifier: workspace:*
         version: link:../../../packages/types
+      '@common-crm/utils':
+        specifier: workspace:*
+        version: link:../../../packages/utils
       '@element-plus/icons-vue':
         specifier: ^2.3.2
         version: 2.3.2(vue@3.5.42(typescript@6.0.3))
@@ -346,6 +352,15 @@ importers:
 
   packages/types:
     devDependencies:
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  packages/utils:
+    devDependencies:
+      element-plus:
+        specifier: ^2.14.5
+        version: 2.14.5(vue@3.5.42(typescript@6.0.3))
       typescript:
         specifier: 6.0.3
         version: 6.0.3

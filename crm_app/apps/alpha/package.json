@@ -15,6 +15,7 @@
     "@common-crm/styles": "workspace:*",
     "@common-crm/system": "workspace:*",
     "@common-crm/types": "workspace:*",
+    "@common-crm/utils": "workspace:*",
     "@element-plus/icons-vue": "^2.3.2",
     "@lottiefiles/dotlottie-vue": "^0.11.27",
     "element-plus": "^2.14.5",

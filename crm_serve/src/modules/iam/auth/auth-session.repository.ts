@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { currentTimestamp, dateToTimestamp, timestampToDate } from '../../../common'
 import { PrismaService } from '../../../database'
 import type { AuthSessionRecord, RotateAuthSessionInput } from './types'
 
@@ -14,13 +15,16 @@ export class AuthSessionRepository {
    * @returns 创建完成后返回 void
    */
   async create(session: AuthSessionRecord): Promise<void> {
+    const now = currentTimestamp()
     await this.prismaService.crmAuthSession.create({
       data: {
         sessionId: session.sessionId,
         userId: session.userId,
         tokenHash: session.tokenHash,
-        expiresAt: session.expiresAt,
-        revokedAt: session.revokedAt
+        expiresAt: dateToTimestamp(session.expiresAt),
+        revokedAt: session.revokedAt ? dateToTimestamp(session.revokedAt) : null,
+        createTime: now,
+        updateTime: now
       }
     })
   }
@@ -39,7 +43,7 @@ export class AuthSessionRepository {
         sessionId,
         userId,
         revokedAt: null,
-        expiresAt: { gt: at }
+        expiresAt: { gt: dateToTimestamp(at) }
       },
       select: {
         sessionId: true,
@@ -50,6 +54,12 @@ export class AuthSessionRepository {
       }
     })
     return session
+      ? {
+          ...session,
+          expiresAt: timestampToDate(session.expiresAt),
+          revokedAt: session.revokedAt === null ? null : timestampToDate(session.revokedAt)
+        }
+      : null
   }
 
   /**
@@ -65,11 +75,12 @@ export class AuthSessionRepository {
         userId: input.userId,
         tokenHash: input.previousTokenHash,
         revokedAt: null,
-        expiresAt: { gt: input.rotatedAt }
+        expiresAt: { gt: dateToTimestamp(input.rotatedAt) }
       },
       data: {
         tokenHash: input.nextTokenHash,
-        expiresAt: input.nextExpiresAt
+        expiresAt: dateToTimestamp(input.nextExpiresAt),
+        updateTime: dateToTimestamp(input.rotatedAt)
       }
     })
     return result.count === 1
@@ -83,9 +94,10 @@ export class AuthSessionRepository {
    * @returns 撤销完成后返回 void
    */
   async revokeByTokenHash(tokenHash: string, revokedAt: Date): Promise<void> {
+    const timestamp = dateToTimestamp(revokedAt)
     await this.prismaService.crmAuthSession.updateMany({
       where: { tokenHash, revokedAt: null },
-      data: { revokedAt }
+      data: { revokedAt: timestamp, updateTime: timestamp }
     })
   }
 }

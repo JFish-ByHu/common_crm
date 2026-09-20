@@ -35,3 +35,11 @@ modules/iam/
 
 新增业务时优先保持这一层级。只有模块的业务复杂度确实增长到需要独立领域模型时，
 才在该模块内部增加更细的领域分层。
+
+## 用户管理
+
+`modules/iam/users/` 与 `auth/` 同级，负责平台用户查询、创建、编辑、账号状态修改
+和单个/批量删除，统一由 `IamModule` 装配。`auth/user.repository.ts` 保留认证专用的
+账号读取与密码修改，`users/users.repository.ts` 处理管理端公开字段和管理事务。
+
+接口路径、参数、响应与删除语义见 [用户管理接口说明](./iam/users/README.md)。

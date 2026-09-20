@@ -53,6 +53,7 @@ const emit = defineEmits<{
         :default-active="activeMenu"
         :default-openeds="defaultOpeneds"
         :collapse="collapsed"
+        :collapse-transition="false"
         @select="emit('select', $event)"
       >
         <template v-for="item in items" :key="item.path">
@@ -106,7 +107,6 @@ const emit = defineEmits<{
   height: 100vh;
   background: var(--crm-color-surface);
   border-right: 1px solid var(--crm-color-border);
-  transition: width 0.28s ease;
 }
 
 .sidebar-header {
@@ -158,6 +158,16 @@ const emit = defineEmits<{
 
 .menu-tag {
   margin-left: 8px;
+}
+
+/* 保留 Element Plus 子菜单动画，缩短持续时间以减少连续布局开销。 */
+.sidebar :deep(.el-collapse-transition-enter-active),
+.sidebar :deep(.el-collapse-transition-leave-active) {
+  transition-duration: 160ms;
+}
+
+.sidebar :deep(.el-sub-menu__icon-arrow) {
+  transition: transform var(--crm-transition-fast);
 }
 
 .sidebar.is-collapsed {

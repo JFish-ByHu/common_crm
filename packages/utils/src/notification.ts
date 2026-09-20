@@ -7,7 +7,10 @@ import {
 type NotificationInput = NotificationOptionsTyped | string | undefined
 type NotificationType = 'primary' | 'success' | 'warning' | 'info' | 'error'
 
-function openNotification(type: NotificationType, input?: NotificationInput): NotificationHandle {
+const openNotification = (
+  type: NotificationType,
+  input?: NotificationInput
+): NotificationHandle => {
   const options: NotificationOptionsTyped =
     typeof input === 'string' || input === undefined ? { message: input } : input
 

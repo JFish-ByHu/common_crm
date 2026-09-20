@@ -10,6 +10,7 @@ export interface FilterOption {
 
 interface FilterFieldBase<Model> {
   prop: Extract<keyof Model, string>
+  /** 用于默认占位提示和无障碍名称，不单独展示标签。 */
   label: string
   width?: string | number
   defaultValue?: Model[keyof Model]

@@ -1,0 +1,107 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common'
+import { AccessTokenGuard } from '../auth/guards'
+import {
+  CreateUserDto,
+  DeleteUsersDto,
+  UpdateUserDto,
+  UpdateUserStatusDto,
+  UserIdDto,
+  UserListQueryDto,
+  UserOptionsQueryDto
+} from './dto'
+import { UsersResultPresenter } from './users-result.presenter'
+import { UsersService } from './users.service'
+
+/** 平台用户管理 HTTP 接口，统一要求有效的 access token。 */
+@Controller('users')
+@UseGuards(AccessTokenGuard)
+export class UsersController {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly presenter: UsersResultPresenter
+  ) {}
+
+  /**
+   * GET /api/users/list：按关键字及账号状态查询用户，可选分页。
+   * @param query keyword 匹配 userId、username、email；accountStatus 单独过滤
+   * @returns 公开用户列表、总数及分页信息，不返回密码
+   */
+  @Get('list')
+  findList(@Query() query: UserListQueryDto) {
+    return this.presenter.present(() => this.usersService.findList(query))
+  }
+
+  /**
+   * GET /api/users/selectList：按用户名查询下拉选项，可选分页。
+   * @param query username 模糊关键字及可选 page、pageSize
+   * @returns 每项仅含 userId、username、accountStatus 的列表
+   */
+  @Get('selectList')
+  findOptions(@Query() query: UserOptionsQueryDto) {
+    return this.presenter.present(() => this.usersService.findOptions(query))
+  }
+
+  /**
+   * POST /api/users/create：生成用户 ID，并使用 bcrypt 摘要保存密码。
+   * @param command 用户名、初始密码及可选邮箱、账号状态
+   * @returns 新用户的公开资料
+   */
+  @Post('create')
+  @HttpCode(HttpStatus.OK)
+  create(@Body() command: CreateUserDto) {
+    return this.presenter.present(() => this.usersService.create(command))
+  }
+
+  /**
+   * PATCH /api/users/update：仅编辑传入的资料，重设密码时撤销全部会话。
+   * @param command userId 必传；用户名、邮箱或新密码至少传入一项
+   * @returns 编辑后的公开资料
+   */
+  @Patch('update')
+  update(@Body() command: UpdateUserDto) {
+    return this.presenter.present(() => this.usersService.update(command.userId, command))
+  }
+
+  /**
+   * PATCH /api/users/updateAccountStatus：启用或停用账号。
+   * @param command userId 和 accountStatus，状态为 1 正常、0 停用
+   * @returns 修改后的公开资料；停用会原子撤销登录会话
+   */
+  @Patch('updateAccountStatus')
+  updateStatus(@Body() command: UpdateUserStatusDto) {
+    return this.presenter.present(() =>
+      this.usersService.updateStatus(command.userId, command.accountStatus)
+    )
+  }
+
+  /**
+   * DELETE /api/users/batchDelete：按 ID 数组批量物理删除用户。
+   * @param command 1 至 1000 个不重复的 userIds
+   * @returns 删除数量，任一用户不存在时整批回滚
+   */
+  @Delete('batchDelete')
+  batchDelete(@Body() command: DeleteUsersDto) {
+    return this.presenter.present(() => this.usersService.deleteMany(command.userIds))
+  }
+
+  /**
+   * DELETE /api/users/delete：物理删除单个用户及关联登录会话。
+   * @param command 待删除用户的 userId
+   * @returns deletedCount 为 1；用户不存在时返回业务码 404
+   */
+  @Delete('delete')
+  delete(@Body() command: UserIdDto) {
+    return this.presenter.present(() => this.usersService.delete(command.userId))
+  }
+}

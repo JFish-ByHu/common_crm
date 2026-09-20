@@ -1,17 +1,15 @@
-import type { FilterDateRange } from '@common-crm/components'
+import type { UserAccountStatus } from '../../services'
 
-export type UserStatus = 'active' | 'disabled'
-
-export interface UserListItem {
-  userId: string
-  username: string
-  email: string | null
-  status: UserStatus
-  updatedAt: string
-}
+export type { UserAccountStatus, UserListItem } from '../../services'
 
 export interface UserFilters {
   keyword: string
-  status: UserStatus | ''
-  updatedAt: FilterDateRange
+  accountStatus: UserAccountStatus | ''
+}
+
+export interface UserFormValues {
+  username: string
+  email: string
+  password: string
+  accountStatus: UserAccountStatus
 }

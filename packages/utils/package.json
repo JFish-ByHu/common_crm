@@ -1,0 +1,23 @@
+{
+  "name": "@common-crm/utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./message": "./src/message.ts",
+    "./notification": "./src/notification.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "element-plus": "^2.14.5"
+  },
+  "devDependencies": {
+    "element-plus": "^2.14.5",
+    "typescript": "6.0.3"
+  }
+}

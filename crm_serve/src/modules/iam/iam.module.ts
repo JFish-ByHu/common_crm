@@ -8,8 +8,9 @@ import { AuthSessionRepository } from './auth/auth-session.repository'
 import { AuthTokenService } from './auth/auth-token.service'
 import { AccessTokenGuard } from './auth/guards/access-token.guard'
 import { UserRepository } from './auth/user.repository'
+import { UsersController, UsersRepository, UsersResultPresenter, UsersService } from './users'
 
-/** IAM 模块，集中装配认证控制器、服务和数据访问。 */
+/** IAM 模块，集中装配认证和平台用户管理。 */
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -23,14 +24,17 @@ import { UserRepository } from './auth/user.repository'
       })
     })
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, UsersController],
   providers: [
     UserRepository,
     AuthSessionRepository,
     AuthTokenService,
     AuthService,
     AuthResultPresenter,
-    AccessTokenGuard
+    AccessTokenGuard,
+    UsersRepository,
+    UsersService,
+    UsersResultPresenter
   ],
   exports: [AccessTokenGuard]
 })

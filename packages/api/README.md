@@ -145,6 +145,35 @@ await logout({ refreshToken })
 await changePassword({ currentPassword, newPassword })
 ```
 
+### Users 模块 (`users.ts`)
+
+从 `@common-crm/api` 或应用的 `services` 统一入口导入：
+
+| 方法                      | 接口                               | 用途                           |
+| ------------------------- | ---------------------------------- | ------------------------------ |
+| `queryUserList`           | `GET /users/list`                  | 关键词、账号状态筛选及可选分页 |
+| `queryUserSelectList`     | `GET /users/selectList`            | 按用户名搜索下拉选项及可选分页 |
+| `createUser`              | `POST /users/create`               | 创建用户                       |
+| `updateUser`              | `PATCH /users/update`              | 编辑用户名、邮箱、密码         |
+| `updateUserAccountStatus` | `PATCH /users/updateAccountStatus` | 启用或停用账号                 |
+| `deleteUser`              | `DELETE /users/delete`             | 单个删除                       |
+| `batchDeleteUsers`        | `DELETE /users/batchDelete`        | 批量删除                       |
+
+```typescript
+import { queryUserList, queryUserSelectList, updateUser, batchDeleteUsers } from '@common-crm/api'
+
+const result = await queryUserList({ keyword: '张', accountStatus: 1, page: 1, pageSize: 20 })
+const options = await queryUserSelectList({ username: '张' })
+await updateUser({ userId, username: '新用户名', email: null })
+await batchDeleteUsers({ userIds: selectedIds })
+```
+
+列表结果均为 `{ list, total, page, pageSize }`。未传 `page` 和 `pageSize` 时查询全部匹配项，响应分页字段为 `null`；任一分页参数传入时，缺省值为 `page=1`、`pageSize=20`。`accountStatus` 为 `1`（正常）或 `0`（停用）。下拉项仅包含 `userId`、`username`、`accountStatus`。
+
+用户列表、创建、编辑及状态更新响应中的 `createTime`、`updateTime` 已由后端按中国标准时间格式化为 `yyyy-MM-dd HH:mm:ss`，前端可直接展示。
+
+两个查询方法的第二个参数支持 `{ signal, showProgress }`，便于取消过期请求。写操作的 ID 和其他参数均放在 JSON 请求体。编辑时省略 `password` 保留原密码，`email: null` 清空邮箱；重设密码、停用和删除用户都会撤销对应的登录会话。
+
 ## 配置说明
 
 ### ApiClientConfig

@@ -3,7 +3,7 @@ import { ElMessage, type MessageHandler, type MessageOptionsWithType } from 'ele
 type MessageInput = MessageOptionsWithType | string | undefined
 type MessageType = 'primary' | 'success' | 'warning' | 'info' | 'error'
 
-function openMessage(type: MessageType, input?: MessageInput): MessageHandler {
+const openMessage = (type: MessageType, input?: MessageInput): MessageHandler => {
   const options: MessageOptionsWithType =
     typeof input === 'string' || input === undefined ? { message: input } : input
 

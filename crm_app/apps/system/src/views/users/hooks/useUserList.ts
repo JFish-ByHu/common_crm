@@ -1,51 +1,102 @@
-import { computed, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { isRequestCanceled, queryUserList } from '../../../services'
+import { Notification } from '@common-crm/utils'
 import type { UserFilters, UserListItem } from '../types'
+import { getUserErrorMessage } from '../utils'
 
-const createFilters = (): UserFilters => ({ keyword: '', status: '', updatedAt: null })
+const createFilters = (): UserFilters => ({ keyword: '', accountStatus: '' })
 
-/** 管理用户列表的筛选状态，为后续接入分页接口保留稳定边界。 */
-export function useUserList() {
+/** 管理服务端分页、已提交的筛选条件与列表请求。 */
+export const useUserList = () => {
   const filters = ref<UserFilters>(createFilters())
   const appliedFilters = ref<UserFilters>(createFilters())
   const users = ref<UserListItem[]>([])
+  const selectedUsers = ref<UserListItem[]>([])
   const currentPage = ref(1)
   const pageSize = ref(10)
+  const total = ref(0)
+  const loading = ref(false)
+  let requestController: AbortController | undefined
+  let disposed = false
 
-  const visibleUsers = computed(() => {
-    const keyword = appliedFilters.value.keyword.trim().toLowerCase()
-    return users.value.filter(user => {
-      const matchesKeyword =
-        !keyword ||
-        user.username.toLowerCase().includes(keyword) ||
-        user.email?.toLowerCase().includes(keyword)
-      const matchesStatus =
-        !appliedFilters.value.status || user.status === appliedFilters.value.status
-      const range = appliedFilters.value.updatedAt
-      const updatedAt = new Date(user.updatedAt).getTime()
-      const matchesTime =
-        !range || (updatedAt >= range[0].getTime() && updatedAt <= range[1].getTime())
-      return matchesKeyword && matchesStatus && matchesTime
-    })
-  })
+  const refreshUserList = async (): Promise<void> => {
+    if (disposed) return
+    requestController?.abort()
+    const controller = new AbortController()
+    requestController = controller
+    loading.value = true
+    selectedUsers.value = []
 
-  const applyFilters = () => {
+    try {
+      const { data } = await queryUserList(
+        {
+          keyword: appliedFilters.value.keyword.trim() || undefined,
+          accountStatus:
+            appliedFilters.value.accountStatus === ''
+              ? undefined
+              : appliedFilters.value.accountStatus,
+          page: currentPage.value,
+          pageSize: pageSize.value
+        },
+        { signal: controller.signal }
+      )
+      if (controller.signal.aborted || requestController !== controller) return
+      if (!data) throw new Error('用户列表响应为空')
+
+      // 删除当前页最后一条记录后，回到仍然有数据的最后一页。
+      const lastPage = Math.max(1, Math.ceil(data.total / pageSize.value))
+      if (currentPage.value > lastPage) {
+        currentPage.value = lastPage
+        await refreshUserList()
+        return
+      }
+      users.value = data.list
+      total.value = data.total
+    } catch (error) {
+      if (controller.signal.aborted || isRequestCanceled(error)) return
+      users.value = []
+      total.value = 0
+      Notification.error({
+        title: '请求失败',
+        message: getUserErrorMessage(error, '用户列表加载失败，请稍后重试')
+      })
+    } finally {
+      if (requestController === controller) loading.value = false
+    }
+  }
+
+  const searchUsers = () => {
     appliedFilters.value = { ...filters.value }
     currentPage.value = 1
+    return refreshUserList()
   }
 
-  const resetFilters = () => {
+  const resetUserFilters = () => {
     filters.value = createFilters()
-    appliedFilters.value = createFilters()
-    currentPage.value = 1
+    return searchUsers()
   }
+
+  const selectUsers = (rows: UserListItem[]) => {
+    selectedUsers.value = rows
+  }
+
+  onMounted(refreshUserList)
+  onBeforeUnmount(() => {
+    disposed = true
+    requestController?.abort()
+  })
 
   return {
     filters,
     users,
+    selectedUsers,
     currentPage,
     pageSize,
-    visibleUsers,
-    applyFilters,
-    resetFilters
+    total,
+    loading,
+    refreshUserList,
+    searchUsers,
+    resetUserFilters,
+    selectUsers
   }
 }

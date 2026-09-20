@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { dateToTimestamp } from '../../../common'
 import { PrismaService } from '../../../database'
 import type { UserRecord } from './types'
 
@@ -76,14 +77,15 @@ export class UserRepository {
     passwordHash: string,
     changedAt: Date
   ): Promise<void> {
+    const timestamp = dateToTimestamp(changedAt)
     await this.prismaService.$transaction([
       this.prismaService.crmUser.update({
         where: { userId },
-        data: { password: passwordHash, updateTime: changedAt }
+        data: { password: passwordHash, updateTime: timestamp }
       }),
       this.prismaService.crmAuthSession.updateMany({
         where: { userId, revokedAt: null },
-        data: { revokedAt: changedAt }
+        data: { revokedAt: timestamp, updateTime: timestamp }
       })
     ])
   }

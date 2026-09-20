@@ -108,7 +108,6 @@ defineExpose({ reset, search })
         class="crm-filter-field"
         :style="{ '--crm-filter-width': fieldWidth(field) }"
       >
-        <label :for="`${formId}-${field.prop}`" class="crm-filter-label">{{ field.label }}</label>
         <ElInput
           v-if="field.type === 'input'"
           :id="`${formId}-${field.prop}`"
@@ -168,7 +167,7 @@ defineExpose({ reset, search })
 .crm-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: 16px 12px;
   margin: 0;
   padding: 16px 0;
@@ -177,17 +176,10 @@ defineExpose({ reset, search })
 .crm-filter-field {
   display: flex;
   flex: 0 1 var(--crm-filter-width);
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
   width: var(--crm-filter-width);
   max-width: 100%;
   min-width: 0;
-}
-
-.crm-filter-label {
-  color: var(--el-text-color-regular);
-  font-size: 14px;
-  line-height: 20px;
 }
 
 .crm-filter-field :deep(.el-date-editor) {
