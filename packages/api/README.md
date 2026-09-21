@@ -138,6 +138,9 @@ const refreshed = await refreshTokens({ refreshToken })
 // 当前用户
 const currentUser = await getCurrentUser()
 
+// 更新当前会话在线记录，不显示进度条；支持 { signal } 取消
+const heartbeat = await sendHeartbeat()
+
 // 撤销当前 refresh session
 await logout({ refreshToken })
 
@@ -153,6 +156,7 @@ await changePassword({ currentPassword, newPassword })
 | ------------------------- | ---------------------------------- | ------------------------------ |
 | `queryUserList`           | `GET /users/list`                  | 关键词、账号状态筛选及可选分页 |
 | `queryUserSelectList`     | `GET /users/selectList`            | 按用户名搜索下拉选项及可选分页 |
+| `queryUsersOnlineStatus`  | `GET /users/onlineStatus`          | 批量查询最多 100 个用户的在线状态 |
 | `createUser`              | `POST /users/create`               | 创建用户                       |
 | `updateUser`              | `PATCH /users/update`              | 编辑用户名、邮箱、密码         |
 | `updateUserAccountStatus` | `PATCH /users/updateAccountStatus` | 启用或停用账号                 |
@@ -171,6 +175,11 @@ await batchDeleteUsers({ userIds: selectedIds })
 列表结果均为 `{ list, total, page, pageSize }`。未传 `page` 和 `pageSize` 时查询全部匹配项，响应分页字段为 `null`；任一分页参数传入时，缺省值为 `page=1`、`pageSize=20`。`accountStatus` 为 `1`（正常）或 `0`（停用）。下拉项仅包含 `userId`、`username`、`accountStatus`。
 
 用户列表、创建、编辑及状态更新响应中的 `createTime`、`updateTime` 已由后端按中国标准时间格式化为 `yyyy-MM-dd HH:mm:ss`，前端可直接展示。
+
+上述用户资料响应同时包含 `onlineStatus`：`1` 在线、`0` 离线、`null` 暂时未知。
+`queryUsersOnlineStatus(userIds, { signal })` 返回 `{ userId, onlineStatus }[]`，忽略不存在的用户，默认不显示进度条。
+`sendHeartbeat({ signal })` 返回 `{ recorded: boolean }`；Redis 故障时为 `false`，不延长登录令牌有效期。
+Alpha 负责定时心跳，子应用只需按需查询状态，避免在多个子应用内重复注册心跳。
 
 两个查询方法的第二个参数支持 `{ signal, showProgress }`，便于取消过期请求。写操作的 ID 和其他参数均放在 JSON 请求体。编辑时省略 `password` 保留原密码，`email: null` 清空邮箱；重设密码、停用和删除用户都会撤销对应的登录会话。
 
@@ -216,6 +225,16 @@ const contentType = response.headers['content-type']
 `request<T>()` 中的 `T` 表示业务 `data`，不要再次写成 `ApiResponse<T>`。业务请求会检查 `{ code, data, msg }` 外层结构；原始响应入口不要求该结构。`getAxiosInstance()` 和 `initRequest()` 返回的实例现在保留 `AxiosResponse`，访问业务响应时使用 `response.data`。
 
 ## 错误处理
+
+### 开发服务重启
+
+开发代理返回带 `X-Crm-Dev-Backend-Unavailable: 1` 标记的 HTTP 503 时，GET/HEAD 请求
+默认按 1、2、4、4 秒间隔最多重试 4 次。`sendHeartbeat()` 为幂等心跳，显式开启同样的重试。
+等待期间保持同一个请求 Promise，页面 loading 和进度条不会反复切换；取消请求或切换账号
+会终止旧请求的重试。重试耗尽后按正常错误流程处理。
+
+登录、创建、编辑和删除默认不重试。生产环境普通 503、401、业务失败和其他网络错误
+也不会触发这套开发重试。单个查询可设 `retryOnUnavailable: false` 关闭。
 
 请求失败时抛出 `ApiError`；主动取消保留 Axios 的取消错误，通常无需向用户提示：
 

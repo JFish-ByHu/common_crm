@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common'
-import { AccessTokenGuard } from '../auth/guards'
+import { AccessTokenGuard } from '../iam'
 import {
   CreateUserDto,
   DeleteUsersDto,
@@ -18,7 +18,8 @@ import {
   UpdateUserStatusDto,
   UserIdDto,
   UserListQueryDto,
-  UserOptionsQueryDto
+  UserOptionsQueryDto,
+  UserOnlineStatusQueryDto
 } from './dto'
 import { UsersResultPresenter } from './users-result.presenter'
 import { UsersService } from './users.service'
@@ -40,6 +41,16 @@ export class UsersController {
   @Get('list')
   findList(@Query() query: UserListQueryDto) {
     return this.presenter.present(() => this.usersService.findList(query))
+  }
+
+  /**
+   * GET /api/users/onlineStatus：批量获取当前页用户的在线状态。
+   * @param query 逗号分隔、去重后最多 100 个 userIds，沿用用户列表访问权限
+   * @returns 已存在用户的 userId、onlineStatus；0 离线、1 在线、null 未知
+   */
+  @Get('onlineStatus')
+  queryOnlineStatus(@Query() query: UserOnlineStatusQueryDto) {
+    return this.presenter.present(() => this.usersService.queryOnlineStatus(query.userIds))
   }
 
   /**

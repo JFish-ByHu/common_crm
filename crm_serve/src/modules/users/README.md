@@ -9,6 +9,7 @@
 | ------ | -------------------------------- | ------------ |
 | GET    | `/api/users/list`                | 用户列表     |
 | GET    | `/api/users/selectList`          | 用户下拉选项 |
+| GET    | `/api/users/onlineStatus`        | 批量在线状态 |
 | POST   | `/api/users/create`              | 创建用户     |
 | PATCH  | `/api/users/update`              | 编辑用户     |
 | PATCH  | `/api/users/updateAccountStatus` | 修改账号状态 |
@@ -34,7 +35,7 @@
 用户列表额外支持 `keyword` 和 `accountStatus`。`keyword` 去除首尾空格后，对
 `userId`、`username`、`email` 按 OR 模糊查询；`accountStatus` 与关键字条件按 AND
 组合。空关键字不添加检索条件。返回字段为 `userId`、`username`、`email`、
-`accountStatus`、`createTime`、`updateTime`，不会查询或返回密码。
+`accountStatus`、`onlineStatus`、`createTime`、`updateTime`，不会查询或返回密码。
 
 ```http
 GET /api/users/list
@@ -67,6 +68,32 @@ GET /api/users/selectList?username=admin&page=1&pageSize=20
   "msg": "SUCCESS"
 }
 ```
+
+## 在线状态
+
+`onlineStatus` 为 `1` 在线、`0` 离线、`null` 未知，不写入用户表。
+状态结合有效登录会话与 Redis 心跳判定；停用账号和没有有效会话的用户均为离线。
+Redis 故障不会使用户列表请求失败，有效会话的在线状态暂时显示未知。
+
+```http
+GET /api/users/onlineStatus?userIds=用户ID1,用户ID2
+```
+
+参数必传，去重后最多 100 个非空 ID，每个最长 64 个字符。返回示例：
+
+```json
+{
+  "code": 200,
+  "data": [
+    { "userId": "用户ID1", "onlineStatus": 1 },
+    { "userId": "用户ID2", "onlineStatus": null }
+  ],
+  "msg": "SUCCESS"
+}
+```
+
+不存在的用户不返回。该接口用于静默更新当前页，不替代用户列表的资料查询。
+更多生命周期和配置说明见 [用户在线状态](../iam/presence/README.md)。
 
 ## 创建用户
 
@@ -157,6 +184,9 @@ DTO 校验失败返回 HTTP 422 和业务码 422；未登录、会话失效或�
 和业务码 401。未知字段会被拒绝，不会静默用于更新数据库。
 
 ## 实现位置
+
+本模块位于 `src/modules/users/`，与 `iam/` 同级，由 `UsersModule` 独立装配。
+`UsersModule` 导入 `IamModule` 复用鉴权、认证会话和在线状态能力；IAM 不反向依赖用户管理模块。
 
 `users.controller.ts` 声明路由与接口注释，`dto/` 校验入参，`users.service.ts`
 处理分页默认值、密码摘要和用户 ID 生成，`users.repository.ts` 封装查询、写入和事务。

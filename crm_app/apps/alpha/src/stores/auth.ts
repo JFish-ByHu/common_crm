@@ -28,6 +28,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(REFRESH_TOKEN_KEY)
   }
 
+  const syncTokensFromStorage = () => {
+    accessToken.value = localStorage.getItem(ACCESS_TOKEN_KEY)
+    refreshToken.value = localStorage.getItem(REFRESH_TOKEN_KEY)
+  }
+
   // 记住用户名和密码（注意：生产环境中应该加密存储或使用更安全的方式）
   const setRememberedCredentials = (username: string, password: string) => {
     rememberedUsername.value = username
@@ -55,6 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     setTokens,
     clearTokens,
+    syncTokensFromStorage,
     setRememberedCredentials,
     clearRememberedCredentials,
     logout

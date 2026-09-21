@@ -51,6 +51,18 @@ export class AuthController {
   }
 
   /**
+   * POST /api/auth/heartbeat：续期当前登录会话的 Redis 在线记录。
+   * @param user 鉴权守卫提供的用户与会话，不接受客户端指定身份或时间
+   * @returns recorded 表示是否成功登记；Redis 故障时为 false，登录状态不受影响
+   */
+  @Post('heartbeat')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AccessTokenGuard)
+  recordHeartbeat(@CurrentUser() user: AuthenticatedUser) {
+    return this.presenter.present(() => this.authService.recordHeartbeat(user))
+  }
+
+  /**
    * 撤销 refresh token 对应的登录会话。
    *
    * @param logoutDto 待撤销的 refresh token

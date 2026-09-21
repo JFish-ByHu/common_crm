@@ -5,9 +5,14 @@ import type { AuthSessionRepository } from './auth-session.repository'
 import type { AuthTokenService } from './auth-token.service'
 import type { AuthTokenPayload, IssuedTokenPair, TokenSubject, UserRecord } from './types'
 import type { UserRepository } from './user.repository'
+import type { PresenceService } from '../presence'
 
 jest.mock('./auth-token.service', () => ({
   AuthTokenService: class AuthTokenService {}
+}))
+
+jest.mock('../presence', () => ({
+  PresenceService: class PresenceService {}
 }))
 
 const USER: UserRecord = {
@@ -33,7 +38,10 @@ function createSessionRepository() {
     create: jest.fn<AuthSessionRepository['create']>(async () => undefined),
     findActive: jest.fn<AuthSessionRepository['findActive']>(async () => null),
     rotate: jest.fn<AuthSessionRepository['rotate']>(async () => false),
-    revokeByTokenHash: jest.fn<AuthSessionRepository['revokeByTokenHash']>(async () => undefined)
+    revokeByTokenHash: jest.fn<AuthSessionRepository['revokeByTokenHash']>(async () => 'session-1'),
+    findSessionIdsByUsers: jest.fn<AuthSessionRepository['findSessionIdsByUsers']>(async () => [
+      'session-1'
+    ])
   }
 }
 
@@ -59,15 +67,22 @@ function createTokenService() {
   }
 }
 
+const createPresenceService = () => ({
+  recordSession: jest.fn<PresenceService['recordSession']>(async () => true),
+  removeSessions: jest.fn<PresenceService['removeSessions']>(async () => undefined)
+})
+
 function createAuthService(
   users: ReturnType<typeof createUserRepository>,
   sessions: ReturnType<typeof createSessionRepository>,
-  tokens: ReturnType<typeof createTokenService>
+  tokens: ReturnType<typeof createTokenService>,
+  presence = createPresenceService()
 ) {
   return new AuthService(
     users as unknown as UserRepository,
     sessions as unknown as AuthSessionRepository,
-    tokens as unknown as AuthTokenService
+    tokens as unknown as AuthTokenService,
+    presence as unknown as PresenceService
   )
 }
 
@@ -80,7 +95,9 @@ describe('AuthService', () => {
     })
     const sessions = createSessionRepository()
     const tokens = createTokenService()
-    const service = createAuthService(users, sessions, tokens)
+    const presence = createPresenceService()
+    presence.recordSession.mockResolvedValue(false)
+    const service = createAuthService(users, sessions, tokens, presence)
 
     await expect(
       service.login({ username: ' admin ', password: 'current-password' })
@@ -89,6 +106,7 @@ describe('AuthService', () => {
       refreshToken: 'next-refresh-token'
     })
     expect(users.findByUsername).toHaveBeenCalledWith('admin')
+    expect(presence.recordSession).toHaveBeenCalledWith('session-1')
     expect(sessions.create).toHaveBeenCalledWith({
       sessionId: 'session-1',
       userId: USER.userId,
@@ -141,7 +159,8 @@ describe('AuthService', () => {
     })
     const sessions = createSessionRepository()
     const tokens = createTokenService()
-    const service = createAuthService(users, sessions, tokens)
+    const presence = createPresenceService()
+    const service = createAuthService(users, sessions, tokens, presence)
 
     await service.changePassword(
       {
@@ -158,5 +177,30 @@ describe('AuthService', () => {
       expect.stringMatching(/^\$2/),
       expect.any(Date)
     )
+    expect(presence.removeSessions).toHaveBeenCalledWith(['session-1'])
+  })
+
+  it('clears only the revoked session and preserves presence if revocation fails', async () => {
+    const sessions = createSessionRepository()
+    const presence = createPresenceService()
+    const service = createAuthService(
+      createUserRepository(),
+      sessions,
+      createTokenService(),
+      presence
+    )
+    await service.logout({ refreshToken: 'refresh-token' })
+    expect(presence.removeSessions).toHaveBeenCalledWith(['session-1'])
+
+    presence.removeSessions.mockClear()
+    sessions.revokeByTokenHash.mockResolvedValueOnce(null)
+    await service.logout({ refreshToken: 'old-token' })
+    expect(presence.removeSessions).not.toHaveBeenCalled()
+
+    sessions.revokeByTokenHash.mockRejectedValueOnce(new Error('Database unavailable'))
+    await expect(service.logout({ refreshToken: 'refresh-token' })).rejects.toThrow(
+      'Database unavailable'
+    )
+    expect(presence.removeSessions).not.toHaveBeenCalled()
   })
 })

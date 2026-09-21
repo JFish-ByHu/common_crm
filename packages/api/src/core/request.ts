@@ -5,6 +5,7 @@ import axios, {
 } from 'axios'
 import NProgress from 'nprogress'
 import type { ApiClientConfig, ApiErrorKind, ApiRequestConfig, ApiResponse } from '../types'
+import { requestWithDevRetry } from './retry'
 
 let axiosInstance: AxiosInstance | null = null
 let activeProgressRequests = 0
@@ -12,7 +13,7 @@ let activeProgressRequests = 0
 NProgress.configure({ showSpinner: false })
 
 type InternalApiRequestConfig = InternalAxiosRequestConfig &
-  Pick<ApiRequestConfig, 'requiresAuth' | 'showProgress'>
+  Pick<ApiRequestConfig, 'requiresAuth' | 'showProgress' | 'retryOnUnavailable'>
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -125,7 +126,9 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
     return { token, version: sessionVersion }
   }
 
-  async function handleUnauthorized(requestConfig: InternalApiRequestConfig | undefined) {
+  const processUnauthorizedSession = async (
+    requestConfig: InternalApiRequestConfig | undefined
+  ) => {
     if (!requestConfig || requestConfig.requiresAuth === false || !config.onUnauthorized) return
     const sentSession = requestSessions.get(requestConfig)
     const currentSession = getSession()
@@ -154,23 +157,27 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
       }
     }
 
-    if ((requestConfig.showProgress ?? config.showProgress ?? true) && 'document' in globalThis) {
-      const resolveAdapter: (
-        adapters: Parameters<typeof axios.getAdapter>[0],
-        config: InternalAxiosRequestConfig
-      ) => ReturnType<typeof axios.getAdapter> = axios.getAdapter
-      const adapter = resolveAdapter(
-        requestConfig.adapter ?? instance.defaults.adapter,
-        requestConfig
-      )
-      // 在实际发送时计数，finally 同时覆盖取消、网络错误和自定义 adapter 异常。
-      requestConfig.adapter = async adapterConfig => {
-        if (activeProgressRequests++ === 0) NProgress.start()
-        try {
-          return await adapter(adapterConfig)
-        } finally {
-          if (--activeProgressRequests === 0) NProgress.done()
-        }
+    const showProgress =
+      (requestConfig.showProgress ?? config.showProgress ?? true) && 'document' in globalThis
+    const resolveAdapter: (
+      adapters: Parameters<typeof axios.getAdapter>[0],
+      config: InternalAxiosRequestConfig
+    ) => ReturnType<typeof axios.getAdapter> = axios.getAdapter
+    const adapter = resolveAdapter(
+      requestConfig.adapter ?? instance.defaults.adapter,
+      requestConfig
+    )
+    // 一个逻辑请求只计数一次，重试等待期间保持 loading 和进度条连续。
+    requestConfig.adapter = async adapterConfig => {
+      if (showProgress && activeProgressRequests++ === 0) NProgress.start()
+      try {
+        return await requestWithDevRetry(
+          adapter,
+          adapterConfig,
+          () => requestConfig.requiresAuth === false || getSession().version === session.version
+        )
+      } finally {
+        if (showProgress && --activeProgressRequests === 0) NProgress.done()
       }
     }
     return requestConfig
@@ -180,7 +187,7 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
     async (response: AxiosResponse<unknown>) => {
       const code = getResponseCode(response.data)
       if (code !== undefined && code >= 400) {
-        if (code === 401) await handleUnauthorized(response.config)
+        if (code === 401) await processUnauthorizedSession(response.config)
         throw new ApiError(
           getErrorMessage(response.data, '请求失败'),
           code,
@@ -195,7 +202,7 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
       if (isRequestCanceled(error)) throw error
       const apiError = normalizeError(error)
       if (axios.isAxiosError(error) && (apiError.status === 401 || apiError.code === 401)) {
-        await handleUnauthorized(error.config)
+        await processUnauthorizedSession(error.config)
       }
       throw apiError
     }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp } from '../../../common'
-import { PrismaService } from '../../../database'
+import { currentTimestamp } from '../../common'
+import { PrismaService } from '../../database'
 import { UsersError } from './users.error'
 import {
   AccountStatus,
@@ -32,6 +32,13 @@ const optionSelect = {
 @Injectable()
 export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  findAccountsForPresence(userIds: string[]) {
+    return this.prisma.crmUser.findMany({
+      where: { userId: { in: userIds } },
+      select: { userId: true, accountStatus: true }
+    })
+  }
 
   /** 查询公开用户字段，并在同一快照中统计匹配总数。 */
   findList(search: UserSearch): Promise<UserListResult<StoredUserListItem>> {

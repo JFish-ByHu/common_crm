@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Result, StatusCode } from '../../../common/http'
+import { Result, StatusCode } from '../../common'
 import { UsersError } from './users.error'
 
 const statuses = {

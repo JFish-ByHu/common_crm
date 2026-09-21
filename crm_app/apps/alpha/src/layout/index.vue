@@ -3,8 +3,9 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Message } from '@common-crm/utils'
 import { useAuthStore, useThemeStore } from '../stores'
+import { logout as revokeSession } from '../services'
 import { HeaderBar, MainContent, Sidebar } from './components'
-import { useLayoutNavigation } from './hooks'
+import { useLayoutNavigation, usePresenceHeartbeat } from './hooks'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -12,15 +13,33 @@ const themeStore = useThemeStore()
 
 const collapsed = ref(false)
 const { menuItems, activeMenu, breadcrumbItems } = useLayoutNavigation()
+const { pauseHeartbeat, resumeHeartbeat } = usePresenceHeartbeat()
+const loggingOut = ref(false)
 
 const selectMenu = (path: string) => {
   router.push(path)
 }
 
-const logout = () => {
-  authStore.logout()
-  router.push('/login')
-  Message.success('已退出登录')
+const logout = async () => {
+  if (loggingOut.value) return
+  loggingOut.value = true
+  pauseHeartbeat()
+  const refreshToken = authStore.refreshToken
+  try {
+    if (refreshToken) await revokeSession({ refreshToken })
+    if (authStore.refreshToken !== refreshToken) {
+      resumeHeartbeat()
+      return
+    }
+    authStore.logout()
+    await router.push('/login')
+    Message.success('已退出登录')
+  } catch {
+    resumeHeartbeat()
+    Message.error('退出登录失败，请稍后重试')
+  } finally {
+    loggingOut.value = false
+  }
 }
 
 const toggleSidebar = () => {

@@ -1,4 +1,5 @@
 export * from './dto'
+export * from './users.module'
 export * from './types'
 export * from './users.controller'
 export * from './users.error'

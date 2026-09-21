@@ -14,6 +14,7 @@ import type {
   UserRecord
 } from './types'
 import { UserRepository } from './user.repository'
+import { PresenceService } from '../presence'
 
 /** 认证业务服务，负责登录、会话轮换、鉴权和密码修改。 */
 @Injectable()
@@ -21,7 +22,8 @@ export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authSessionRepository: AuthSessionRepository,
-    private readonly authTokenService: AuthTokenService
+    private readonly authTokenService: AuthTokenService,
+    private readonly presenceService: PresenceService
   ) {}
 
   /**
@@ -50,6 +52,7 @@ export class AuthService {
       expiresAt: tokens.expiresAt,
       revokedAt: null
     })
+    await this.presenceService.recordSession(tokens.sessionId)
 
     return this.toTokenData(tokens)
   }
@@ -101,6 +104,11 @@ export class AuthService {
     return { userId: user.userId, username: user.username, email: user.email }
   }
 
+  /** 心跳只更新 Redis，不修改数据库资料时间或延长认证有效期。 */
+  async recordHeartbeat(user: AuthenticatedUser): Promise<{ recorded: boolean }> {
+    return { recorded: await this.presenceService.recordSession(user.sessionId) }
+  }
+
   /**
    * 幂等撤销 refresh token 对应的认证会话。
    *
@@ -108,10 +116,11 @@ export class AuthService {
    * @returns 操作完成后返回 void
    */
   async logout(command: LogoutCommand): Promise<void> {
-    await this.authSessionRepository.revokeByTokenHash(
+    const sessionId = await this.authSessionRepository.revokeByTokenHash(
       this.authTokenService.hashToken(command.refreshToken),
       new Date()
     )
+    if (sessionId) await this.presenceService.removeSessions([sessionId])
   }
 
   /**
@@ -134,11 +143,13 @@ export class AuthService {
       throw new AuthApplicationError('INVALID_CREDENTIALS')
     }
 
+    const sessionIds = await this.authSessionRepository.findSessionIdsByUsers([user.userId])
     await this.userRepository.updatePasswordAndRevokeSessions(
       user.userId,
       await hash(command.newPassword, 12),
       new Date()
     )
+    await this.presenceService.removeSessions(sessionIds)
   }
 
   /**

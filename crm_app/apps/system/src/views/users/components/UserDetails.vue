@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { UserListItem } from '../types'
+import UserOnlineStatus from './UserOnlineStatus.vue'
 
 defineProps<{ user: UserListItem | null }>()
 const visible = defineModel<boolean>({ default: false })
@@ -19,6 +20,9 @@ const visible = defineModel<boolean>({ default: false })
       <el-descriptions-item label="状态">{{
         user.accountStatus === 1 ? '正常' : '停用'
       }}</el-descriptions-item>
+      <el-descriptions-item label="在线状态">
+        <UserOnlineStatus :status="user.onlineStatus" />
+      </el-descriptions-item>
       <el-descriptions-item label="创建时间">{{ user.createTime }}</el-descriptions-item>
       <el-descriptions-item label="更新时间">{{ user.updateTime }}</el-descriptions-item>
     </el-descriptions>

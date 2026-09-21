@@ -8,11 +8,12 @@ import { AuthSessionRepository } from './auth/auth-session.repository'
 import { AuthTokenService } from './auth/auth-token.service'
 import { AccessTokenGuard } from './auth/guards/access-token.guard'
 import { UserRepository } from './auth/user.repository'
-import { UsersController, UsersRepository, UsersResultPresenter, UsersService } from './users'
+import { PresenceModule } from './presence'
 
-/** IAM 模块，集中装配认证和平台用户管理。 */
+/** IAM 模块，负责认证、鉴权、登录会话和在线状态。 */
 @Module({
   imports: [
+    PresenceModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -24,18 +25,15 @@ import { UsersController, UsersRepository, UsersResultPresenter, UsersService } 
       })
     })
   ],
-  controllers: [AuthController, UsersController],
+  controllers: [AuthController],
   providers: [
     UserRepository,
     AuthSessionRepository,
     AuthTokenService,
     AuthService,
     AuthResultPresenter,
-    AccessTokenGuard,
-    UsersRepository,
-    UsersService,
-    UsersResultPresenter
+    AccessTokenGuard
   ],
-  exports: [AccessTokenGuard]
+  exports: [AccessTokenGuard, AuthService, AuthSessionRepository, PresenceModule]
 })
 export class IamModule {}

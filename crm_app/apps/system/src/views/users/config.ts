@@ -25,6 +25,7 @@ export const userColumns: TableColumn<UserListItem>[] = [
   { prop: 'username', label: '用户名', minWidth: 180 },
   { prop: 'email', label: '邮箱', minWidth: 240, formatter: row => row.email || '-' },
   { prop: 'accountStatus', label: '账号状态', width: 110, slot: 'status' },
+  { prop: 'onlineStatus', label: '在线状态', width: 110, slot: 'onlineStatus' },
   {
     prop: 'createTime',
     label: '创建时间',

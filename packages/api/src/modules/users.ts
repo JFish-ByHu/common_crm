@@ -3,6 +3,14 @@ import type { ApiRequestConfig, ApiResponse, PageRequest } from '../types'
 
 export type UserAccountStatus = 0 | 1
 
+/** 0 离线、1 在线、null 暂时无法确定。 */
+export type UserOnlineStatus = 0 | 1 | null
+
+export interface UserPresenceItem {
+  userId: string
+  onlineStatus: UserOnlineStatus
+}
+
 export interface UserSelectItem {
   userId: string
   username: string
@@ -11,6 +19,7 @@ export interface UserSelectItem {
 
 export interface UserListItem extends UserSelectItem {
   email: string | null
+  onlineStatus: UserOnlineStatus
   /** 中国标准时间，格式为 yyyy-MM-dd HH:mm:ss。 */
   createTime: string
   /** 中国标准时间，格式为 yyyy-MM-dd HH:mm:ss。 */
@@ -67,6 +76,20 @@ export interface DeleteUsersResponse {
 }
 
 type UserQueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
+
+/** 查询最多 100 个用户的在线状态；不存在的用户不返回。 */
+export const queryUsersOnlineStatus = (
+  userIds: string[],
+  config: Pick<ApiRequestConfig, 'signal'> = {}
+): Promise<ApiResponse<UserPresenceItem[]>> =>
+  request<UserPresenceItem[]>({
+    ...config,
+    url: '/users/onlineStatus',
+    method: 'get',
+    params: { userIds: [...new Set(userIds)].join(',') },
+    timeout: 5000,
+    showProgress: false
+  })
 
 /** 查询用户列表；省略 page 和 pageSize 时返回全部匹配用户。 */
 export const queryUserList = (

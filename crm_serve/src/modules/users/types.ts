@@ -1,3 +1,5 @@
+import type { OnlineStatus } from '../iam'
+
 export const AccountStatus = {
   DISABLED: 0,
   ACTIVE: 1
@@ -17,6 +19,7 @@ export interface StoredUserListItem {
 
 /** 用户管理接口的公开字段，时间由服务端统一格式化。 */
 export interface UserListItem extends Omit<StoredUserListItem, 'createTime' | 'updateTime'> {
+  onlineStatus: OnlineStatus
   createTime: string
   updateTime: string
 }

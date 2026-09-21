@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types'
+import type { ApiRequestConfig, ApiResponse } from '../types'
 import { request } from '../core'
 
 /**
@@ -33,6 +33,19 @@ export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
 }
+
+/** 更新当前认证会话的在线记录，不延长 token 有效期。 */
+export const sendHeartbeat = (
+  config: Pick<ApiRequestConfig, 'signal'> = {}
+): Promise<ApiResponse<{ recorded: boolean }>> =>
+  request<{ recorded: boolean }>({
+    ...config,
+    url: '/auth/heartbeat',
+    method: 'post',
+    timeout: 5000,
+    retryOnUnavailable: true,
+    showProgress: false
+  })
 
 /**
  * 用户登录

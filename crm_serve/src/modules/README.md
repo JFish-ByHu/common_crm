@@ -38,8 +38,39 @@ modules/iam/
 
 ## 用户管理
 
-`modules/iam/users/` 与 `auth/` 同级，负责平台用户查询、创建、编辑、账号状态修改
-和单个/批量删除，统一由 `IamModule` 装配。`auth/user.repository.ts` 保留认证专用的
-账号读取与密码修改，`users/users.repository.ts` 处理管理端公开字段和管理事务。
+`modules/users/` 与 `modules/iam/` 同级，负责平台用户查询、创建、编辑、账号状态修改
+和单个/批量删除，由独立的 `UsersModule` 装配。
 
-接口路径、参数、响应与删除语义见 [用户管理接口说明](./iam/users/README.md)。
+```text
+modules/
+├── index.ts
+├── iam/
+│   ├── auth/
+│   ├── presence/
+│   ├── iam.module.ts
+│   └── index.ts
+└── users/
+    ├── dto/
+    ├── users.controller.ts
+    ├── users.service.ts
+    ├── users.repository.ts
+    ├── users-result.presenter.ts
+    ├── users.error.ts
+    ├── users.module.ts
+    ├── types.ts
+    └── index.ts
+```
+
+`AppModule` 通过 `modules/index.ts` 引入两个业务模块。`UsersModule` 导入 `IamModule`
+复用鉴权守卫、认证服务、会话仓储与在线状态模块，依赖方向为 `UsersModule -> IamModule`。
+`IamModule` 不导入用户管理模块，也不重复注册其 Controller 和 Service。
+`iam/auth/user.repository.ts` 保留认证专用的账号读取与密码修改，
+`users/users.repository.ts` 处理管理端公开字段和管理事务。
+
+接口路径保持 `/api/users/*`，参数、响应与删除语义见 [用户管理接口说明](./users/README.md)。
+
+## 在线状态
+
+`modules/iam/presence/` 维护会话级 Redis 在线记录，由认证和用户管理服务共同调用。
+`src/redis/` 提供共享 Redis 连接与故障降级，MySQL 登录会话仍是鉴权依据。
+无需新增表或用户字段，接口与客户端心跳规则见 [用户在线状态](./iam/presence/README.md)。

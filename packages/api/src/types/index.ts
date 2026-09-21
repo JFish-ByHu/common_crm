@@ -18,6 +18,8 @@ export interface ApiRequestConfig<D = unknown> extends AxiosRequestConfig<D> {
   requiresAuth?: boolean
   /** 覆盖客户端进度条配置，轮询等后台请求可设为 false。 */
   showProgress?: boolean
+  /** 开发后端重启时有限重试；默认仅 GET/HEAD，幂等心跳可显式开启。 */
+  retryOnUnavailable?: boolean
 }
 
 export type ApiErrorKind = 'business' | 'http' | 'network' | 'timeout' | 'protocol' | 'unknown'

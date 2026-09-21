@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
-import { UserDetails, UserEditor, UserToolbar } from './components'
+import { UserDetails, UserEditor, UserOnlineStatus, UserToolbar } from './components'
 import { userActions, userColumns, userFilterFields } from './config'
-import { useUserActions, useUserList } from './hooks'
+import { useUserActions, useUserList, useUserPresence } from './hooks'
 import type { UserListItem } from './types'
 
 const {
@@ -33,6 +33,7 @@ const {
   deleteSelectedUsers
 } = useUserActions(refreshUserList)
 const busy = computed(() => loading.value || saving.value || mutating.value)
+useUserPresence(users, busy, currentPage, pageSize)
 const detailsVisible = ref(false)
 const selectedUser = ref<UserListItem | null>(null)
 
@@ -90,6 +91,9 @@ const executeUserAction = (key: string, row: UserListItem) => {
           class="user-status-switch"
           :aria-label="`${row.username}的账号状态：${row.accountStatus === 1 ? '正常' : '停用'}`"
         />
+      </template>
+      <template #onlineStatus="{ row }">
+        <UserOnlineStatus :status="row.onlineStatus" />
       </template>
     </CrmTable>
     <UserDetails v-model="detailsVisible" :user="selectedUser" />

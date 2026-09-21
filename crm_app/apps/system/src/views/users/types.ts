@@ -1,6 +1,6 @@
 import type { UserAccountStatus } from '../../services'
 
-export type { UserAccountStatus, UserListItem } from '../../services'
+export type { UserAccountStatus, UserListItem, UserOnlineStatus } from '../../services'
 
 export interface UserFilters {
   keyword: string

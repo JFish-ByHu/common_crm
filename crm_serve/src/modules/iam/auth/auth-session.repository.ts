@@ -8,6 +8,28 @@ import type { AuthSessionRecord, RotateAuthSessionInput } from './types'
 export class AuthSessionRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
+  /** 批量查询仍可用于在线判定的会话，不读取 token 摘要。 */
+  findActiveForUsers(userIds: string[]) {
+    return this.prismaService.crmAuthSession.findMany({
+      where: {
+        userId: { in: userIds },
+        revokedAt: null,
+        expiresAt: { gt: currentTimestamp() },
+        user: { accountStatus: 1 }
+      },
+      select: { sessionId: true, userId: true }
+    })
+  }
+
+  /** 在撤销或删除前收集在线 Key；TTL 会兜底清理并发产生的残余记录。 */
+  async findSessionIdsByUsers(userIds: string[]): Promise<string[]> {
+    const sessions = await this.prismaService.crmAuthSession.findMany({
+      where: { userId: { in: userIds }, revokedAt: null, expiresAt: { gt: currentTimestamp() } },
+      select: { sessionId: true }
+    })
+    return sessions.map(session => session.sessionId)
+  }
+
   /**
    * 持久化新认证会话。
    *
@@ -91,13 +113,21 @@ export class AuthSessionRepository {
    *
    * @param tokenHash refresh token 摘要
    * @param revokedAt 撤销时间
-   * @returns 撤销完成后返回 void
+   * @returns 本次撤销的会话 ID；未匹配时返回 null
    */
-  async revokeByTokenHash(tokenHash: string, revokedAt: Date): Promise<void> {
+  async revokeByTokenHash(tokenHash: string, revokedAt: Date): Promise<string | null> {
     const timestamp = dateToTimestamp(revokedAt)
-    await this.prismaService.crmAuthSession.updateMany({
-      where: { tokenHash, revokedAt: null },
-      data: { revokedAt: timestamp, updateTime: timestamp }
+    return this.prismaService.$transaction(async transaction => {
+      const session = await transaction.crmAuthSession.findUnique({
+        where: { tokenHash },
+        select: { sessionId: true }
+      })
+      if (!session) return null
+      const result = await transaction.crmAuthSession.updateMany({
+        where: { tokenHash, revokedAt: null },
+        data: { revokedAt: timestamp, updateTime: timestamp }
+      })
+      return result.count ? session.sessionId : null
     })
   }
 }
