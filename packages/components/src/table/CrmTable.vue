@@ -233,6 +233,10 @@ defineExpose({
   min-width: 0;
 }
 
+.crm-table {
+  box-shadow: var(--el-box-shadow-lighter);
+}
+
 .crm-table-actions {
   display: flex;
   flex-wrap: wrap;

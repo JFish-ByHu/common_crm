@@ -9,3 +9,6 @@ dist/
 .legacy-app-dependencies/
 .legacy-app-node-modules/
 .crm_serve_before_nest_cli/
+crm_serve/prisma.config.js
+crm_serve/prisma.config.js.map
+crm_serve/prisma.config.d.ts

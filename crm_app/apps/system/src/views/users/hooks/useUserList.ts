@@ -19,8 +19,8 @@ export const useUserList = () => {
   let requestController: AbortController | undefined
   let disposed = false
 
-  const refreshUserList = async (): Promise<void> => {
-    if (disposed) return
+  const refreshUserList = async (): Promise<boolean> => {
+    if (disposed) return false
     requestController?.abort()
     const controller = new AbortController()
     requestController = controller
@@ -40,26 +40,27 @@ export const useUserList = () => {
         },
         { signal: controller.signal }
       )
-      if (controller.signal.aborted || requestController !== controller) return
+      if (controller.signal.aborted || requestController !== controller) return false
       if (!data) throw new Error('用户列表响应为空')
 
       // 删除当前页最后一条记录后，回到仍然有数据的最后一页。
       const lastPage = Math.max(1, Math.ceil(data.total / pageSize.value))
       if (currentPage.value > lastPage) {
         currentPage.value = lastPage
-        await refreshUserList()
-        return
+        return await refreshUserList()
       }
       users.value = data.list
       total.value = data.total
+      return true
     } catch (error) {
-      if (controller.signal.aborted || isRequestCanceled(error)) return
+      if (controller.signal.aborted || isRequestCanceled(error)) return false
       users.value = []
       total.value = 0
       Notification.error({
         title: '请求失败',
         message: getUserErrorMessage(error, '用户列表加载失败，请稍后重试')
       })
+      return false
     } finally {
       if (requestController === controller) loading.value = false
     }

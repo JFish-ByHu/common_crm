@@ -1,4 +1,4 @@
-import { onBeforeUnmount, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import {
   batchDeleteUsers,
@@ -11,7 +11,7 @@ import { Message } from '@common-crm/utils'
 import type { UserFormValues, UserListItem } from '../types'
 import { getUserErrorMessage } from '../utils'
 
-export const useUserActions = (refreshUserList: () => Promise<void>) => {
+export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
   const editorVisible = ref(false)
   const editingUser = ref<UserListItem | null>(null)
   const saving = ref(false)
@@ -41,6 +41,7 @@ export const useUserActions = (refreshUserList: () => Promise<void>) => {
     saving.value = true
     saveError.value = ''
     const user = editingUser.value
+    let refreshed = false
 
     try {
       const profile = { username: values.username.trim(), email: values.email.trim() || null }
@@ -59,13 +60,15 @@ export const useUserActions = (refreshUserList: () => Promise<void>) => {
       }
       if (disposed) return
       editorVisible.value = false
-      Message.success(user ? '用户已更新' : '用户已创建')
-      await refreshUserList()
+      refreshed = await refreshUserList()
     } catch (error) {
       if (!disposed) saveError.value = getUserErrorMessage(error, '保存用户失败，请稍后重试')
     } finally {
       saving.value = false
     }
+    if (!refreshed || disposed) return
+    await nextTick()
+    if (!disposed) Message.success(user ? '用户已更新' : '用户已创建')
   }
 
   const confirmUserMutation = async (
@@ -76,6 +79,7 @@ export const useUserActions = (refreshUserList: () => Promise<void>) => {
   ): Promise<boolean> => {
     if (confirming.value || mutating.value || saving.value || disposed) return false
     confirming.value = true
+    let refreshed = false
     try {
       await ElMessageBox.confirm(message, title, {
         type: 'warning',
@@ -88,9 +92,7 @@ export const useUserActions = (refreshUserList: () => Promise<void>) => {
       mutating.value = true
       await operation()
       if (disposed) return false
-      Message.success(successMessage)
-      await refreshUserList()
-      return true
+      refreshed = await refreshUserList()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close' && !disposed) {
         Message.error(getUserErrorMessage(error, '操作失败，请稍后重试'))
@@ -100,6 +102,11 @@ export const useUserActions = (refreshUserList: () => Promise<void>) => {
       confirming.value = false
       mutating.value = false
     }
+    if (!refreshed || disposed) return false
+    await nextTick()
+    if (disposed) return false
+    Message.success(successMessage)
+    return true
   }
 
   const changeUserStatus = async (user: UserListItem): Promise<boolean> => {
