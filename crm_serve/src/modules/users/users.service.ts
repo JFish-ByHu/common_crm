@@ -120,6 +120,13 @@ export class UsersService {
     return result
   }
 
+  /** 强制指定用户退出全部登录会话。 */
+  async logout(userId: string) {
+    const sessionIds = await this.authSessionRepository.revokeByUsers([userId], new Date())
+    await this.presenceService.removeSessions(sessionIds)
+    return { revokedCount: sessionIds.length }
+  }
+
   private async queryPresence(users: { userId: string; accountStatus: number }[]) {
     const statuses = new Map<string, OnlineStatus>(users.map(user => [user.userId, 0]))
     const enabledIds = users

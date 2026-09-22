@@ -29,6 +29,8 @@ export interface TableActionColumn {
   label?: string
   width?: number | string
   fixed?: false | 'left' | 'right'
+  /** 直接平铺显示的操作数量，超出部分收进更多菜单。 */
+  inlineActionCount?: number
 }
 
 export interface TablePageChange {

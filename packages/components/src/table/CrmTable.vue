@@ -3,6 +3,10 @@ import { computed, ref, watch } from 'vue'
 import {
   ElButton,
   ElConfigProvider,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElIcon,
   ElPagination,
   ElTable,
   ElTableColumn,
@@ -104,8 +108,20 @@ function rowActions(row: Row) {
   )
 }
 
-function handleAction(action: TableAction<Row>, row: Row, index: number) {
+const inlineActions = (row: Row) => {
+  return rowActions(row).slice(0, Math.max(0, props.actionColumn.inlineActionCount ?? 2))
+}
+
+const overflowActions = (row: Row) => {
+  return rowActions(row).slice(Math.max(0, props.actionColumn.inlineActionCount ?? 2))
+}
+
+const emitAction = (action: TableAction<Row>, row: Row, index: number) => {
   if (!isDisabled(action, row)) emit('action', action.key, row, index)
+}
+
+const emitOverflowAction = (command: { action: TableAction<Row>; row: Row; index: number }) => {
+  emitAction(command.action, command.row, command.index)
 }
 
 defineExpose({
@@ -179,7 +195,7 @@ defineExpose({
             <slot name="actions" :row="scope.row" :index="scope.$index">
               <div class="crm-table-actions">
                 <ElTooltip
-                  v-for="action in rowActions(scope.row)"
+                  v-for="action in inlineActions(scope.row)"
                   :key="action.key"
                   :content="action.label"
                   placement="top"
@@ -192,7 +208,7 @@ defineExpose({
                       :icon="resolveTableIcon(action.icon)"
                       :aria-label="action.label"
                       :disabled="isDisabled(action, scope.row)"
-                      @click.stop="handleAction(action, scope.row, scope.$index)"
+                      @click.stop="emitAction(action, scope.row, scope.$index)"
                     >
                       <template v-if="action.showLabel || !resolveTableIcon(action.icon)">{{
                         action.label
@@ -200,6 +216,35 @@ defineExpose({
                     </ElButton>
                   </span>
                 </ElTooltip>
+                <ElDropdown
+                  v-if="overflowActions(scope.row).length"
+                  trigger="click"
+                  @command="emitOverflowAction"
+                >
+                  <ElButton
+                    link
+                    type="primary"
+                    :icon="resolveTableIcon('MoreFilled')"
+                    aria-label="更多操作"
+                    @click.stop
+                  />
+                  <template #dropdown>
+                    <ElDropdownMenu>
+                      <ElDropdownItem
+                        v-for="action in overflowActions(scope.row)"
+                        :key="action.key"
+                        :command="{ action, row: scope.row, index: scope.$index }"
+                        :disabled="isDisabled(action, scope.row)"
+                        :class="{ 'crm-table-dropdown-danger': action.type === 'danger' }"
+                      >
+                        <ElIcon v-if="resolveTableIcon(action.icon)">
+                          <component :is="resolveTableIcon(action.icon)" />
+                        </ElIcon>
+                        {{ action.label }}
+                      </ElDropdownItem>
+                    </ElDropdownMenu>
+                  </template>
+                </ElDropdown>
               </div>
             </slot>
           </template>
@@ -252,6 +297,19 @@ defineExpose({
 .crm-table-action :deep(.el-button) {
   min-width: 28px;
   min-height: 28px;
+}
+
+.crm-table-actions :deep(.el-dropdown) {
+  display: inline-flex;
+}
+
+.crm-table-actions :deep(.el-dropdown .el-button) {
+  min-width: 28px;
+  min-height: 28px;
+}
+
+:global(.crm-table-dropdown-danger) {
+  color: var(--crm-color-danger);
 }
 
 .crm-table-pagination {

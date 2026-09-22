@@ -75,6 +75,10 @@ export interface DeleteUsersResponse {
   deletedCount: number
 }
 
+export interface LogoutUserResponse {
+  revokedCount: number
+}
+
 type UserQueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
 
 /** 查询最多 100 个用户的在线状态；不存在的用户不返回。 */
@@ -143,5 +147,13 @@ export const batchDeleteUsers = (
   request<DeleteUsersResponse, BatchDeleteUsersRequest>({
     url: '/users/batchDelete',
     method: 'delete',
+    data
+  })
+
+/** 强制指定用户退出全部登录会话。 */
+export const logoutUser = (data: DeleteUserRequest): Promise<ApiResponse<LogoutUserResponse>> =>
+  request<LogoutUserResponse, DeleteUserRequest>({
+    url: '/users/logout',
+    method: 'post',
     data
   })

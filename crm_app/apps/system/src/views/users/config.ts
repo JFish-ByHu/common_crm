@@ -41,5 +41,6 @@ export const userColumns: TableColumn<UserListItem>[] = [
 export const userActions: TableAction<UserListItem>[] = [
   { key: 'view', label: '查看详情', icon: 'View' },
   { key: 'edit', label: '编辑用户', icon: 'Edit' },
+  { key: 'logout', label: '强制登出', icon: 'SwitchButton', type: 'warning' },
   { key: 'delete', label: '删除用户', icon: 'Delete', type: 'danger' }
 ]

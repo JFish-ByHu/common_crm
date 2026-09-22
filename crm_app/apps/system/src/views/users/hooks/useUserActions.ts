@@ -4,6 +4,7 @@ import {
   batchDeleteUsers,
   createUser,
   deleteUser,
+  logoutUser as forceLogoutUser,
   updateUser,
   updateUserAccountStatus
 } from '../../../services'
@@ -135,6 +136,15 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
     )
   }
 
+  const logoutUser = (user: UserListItem) => {
+    return confirmUserMutation(
+      '强制登出用户',
+      `确定让用户“${user.username}”退出所有登录会话吗？该用户当前的登录状态将立即失效。`,
+      () => forceLogoutUser({ userId: user.userId }),
+      '用户已强制登出'
+    )
+  }
+
   const deleteSelectedUsers = (users: UserListItem[]) => {
     const userIds = users.map(user => user.userId)
     if (!userIds.length) return Promise.resolve(false)
@@ -156,6 +166,7 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
     openEditUser,
     saveUser,
     changeUserStatus,
+    logoutUser,
     deleteSelectedUser,
     deleteSelectedUsers
   }

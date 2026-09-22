@@ -115,4 +115,15 @@ export class UsersController {
   delete(@Body() command: UserIdDto) {
     return this.presenter.present(() => this.usersService.delete(command.userId))
   }
+
+  /**
+   * POST /api/users/logout：强制指定用户退出全部登录会话。
+   * @param command 待退出用户的 userId
+   * @returns 撤销的会话数量；没有有效会话时也幂等成功
+   */
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Body() command: UserIdDto) {
+    return this.presenter.present(() => this.usersService.logout(command.userId))
+  }
 }

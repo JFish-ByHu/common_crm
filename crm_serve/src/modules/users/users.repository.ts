@@ -34,10 +34,12 @@ export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findAccountsForPresence(userIds: string[]) {
-    return this.prisma.crmUser.findMany({
-      where: { userId: { in: userIds } },
-      select: { userId: true, accountStatus: true }
-    })
+    return this.prisma.readWithRetry(() =>
+      this.prisma.crmUser.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, accountStatus: true }
+      })
+    )
   }
 
   /** 查询公开用户字段，并在同一快照中统计匹配总数。 */
@@ -154,19 +156,21 @@ export class UsersRepository {
       ...(search.username ? { username: { contains: search.username } } : {})
     }
     const pagination = search.pagination
-    const [list, total] = await this.prisma.$transaction(
-      [
-        this.prisma.crmUser.findMany({
-          where,
-          select,
-          orderBy: [{ createTime: 'desc' }, { userId: 'asc' }],
-          ...(pagination
-            ? { skip: (pagination.page - 1) * pagination.pageSize, take: pagination.pageSize }
-            : {})
-        }),
-        this.prisma.crmUser.count({ where })
-      ],
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
+    const [list, total] = await this.prisma.readWithRetry(() =>
+      this.prisma.$transaction(
+        [
+          this.prisma.crmUser.findMany({
+            where,
+            select,
+            orderBy: [{ createTime: 'desc' }, { userId: 'asc' }],
+            ...(pagination
+              ? { skip: (pagination.page - 1) * pagination.pageSize, take: pagination.pageSize }
+              : {})
+          }),
+          this.prisma.crmUser.count({ where })
+        ],
+        { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
+      )
     )
     return {
       list,

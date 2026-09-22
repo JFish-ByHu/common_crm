@@ -10,24 +10,55 @@ export class AuthSessionRepository {
 
   /** 批量查询仍可用于在线判定的会话，不读取 token 摘要。 */
   findActiveForUsers(userIds: string[]) {
-    return this.prismaService.crmAuthSession.findMany({
-      where: {
-        userId: { in: userIds },
-        revokedAt: null,
-        expiresAt: { gt: currentTimestamp() },
-        user: { accountStatus: 1 }
-      },
-      select: { sessionId: true, userId: true }
-    })
+    return this.prismaService.readWithRetry(() =>
+      this.prismaService.crmAuthSession.findMany({
+        where: {
+          userId: { in: userIds },
+          revokedAt: null,
+          expiresAt: { gt: currentTimestamp() },
+          user: { accountStatus: 1 }
+        },
+        select: { sessionId: true, userId: true }
+      })
+    )
   }
 
   /** 在撤销或删除前收集在线 Key；TTL 会兜底清理并发产生的残余记录。 */
   async findSessionIdsByUsers(userIds: string[]): Promise<string[]> {
-    const sessions = await this.prismaService.crmAuthSession.findMany({
-      where: { userId: { in: userIds }, revokedAt: null, expiresAt: { gt: currentTimestamp() } },
-      select: { sessionId: true }
-    })
+    const sessions = await this.prismaService.readWithRetry(() =>
+      this.prismaService.crmAuthSession.findMany({
+        where: { userId: { in: userIds }, revokedAt: null, expiresAt: { gt: currentTimestamp() } },
+        select: { sessionId: true }
+      })
+    )
     return sessions.map(session => session.sessionId)
+  }
+
+  /** 撤销指定用户的全部有效会话，并返回待清理的在线记录 ID。 */
+  async revokeByUsers(userIds: string[], revokedAt: Date): Promise<string[]> {
+    const uniqueUserIds = [...new Set(userIds)]
+    if (!uniqueUserIds.length) return []
+    const timestamp = dateToTimestamp(revokedAt)
+    return this.prismaService.$transaction(async transaction => {
+      const sessions = await transaction.crmAuthSession.findMany({
+        where: {
+          userId: { in: uniqueUserIds },
+          revokedAt: null,
+          expiresAt: { gt: timestamp }
+        },
+        select: { sessionId: true }
+      })
+      if (!sessions.length) return []
+      await transaction.crmAuthSession.updateMany({
+        where: {
+          userId: { in: uniqueUserIds },
+          revokedAt: null,
+          expiresAt: { gt: timestamp }
+        },
+        data: { revokedAt: timestamp, updateTime: timestamp }
+      })
+      return sessions.map(session => session.sessionId)
+    })
   }
 
   /**
@@ -60,21 +91,23 @@ export class AuthSessionRepository {
    * @returns 有效会话；不存在时返回 null
    */
   async findActive(sessionId: string, userId: string, at: Date): Promise<AuthSessionRecord | null> {
-    const session = await this.prismaService.crmAuthSession.findFirst({
-      where: {
-        sessionId,
-        userId,
-        revokedAt: null,
-        expiresAt: { gt: dateToTimestamp(at) }
-      },
-      select: {
-        sessionId: true,
-        userId: true,
-        tokenHash: true,
-        expiresAt: true,
-        revokedAt: true
-      }
-    })
+    const session = await this.prismaService.readWithRetry(() =>
+      this.prismaService.crmAuthSession.findFirst({
+        where: {
+          sessionId,
+          userId,
+          revokedAt: null,
+          expiresAt: { gt: dateToTimestamp(at) }
+        },
+        select: {
+          sessionId: true,
+          userId: true,
+          tokenHash: true,
+          expiresAt: true,
+          revokedAt: true
+        }
+      })
+    )
     return session
       ? {
           ...session,

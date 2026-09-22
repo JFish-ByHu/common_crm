@@ -15,16 +15,18 @@ export class UserRepository {
    * @returns 用户认证字段；不存在时返回 null
    */
   async findById(userId: string): Promise<UserRecord | null> {
-    const user = await this.prismaService.crmUser.findUnique({
-      where: { userId },
-      select: {
-        userId: true,
-        username: true,
-        password: true,
-        email: true,
-        accountStatus: true
-      }
-    })
+    const user = await this.prismaService.readWithRetry(() =>
+      this.prismaService.crmUser.findUnique({
+        where: { userId },
+        select: {
+          userId: true,
+          username: true,
+          password: true,
+          email: true,
+          accountStatus: true
+        }
+      })
+    )
     return user
       ? {
           userId: user.userId,
@@ -43,16 +45,18 @@ export class UserRepository {
    * @returns 用户认证字段；不存在时返回 null
    */
   async findByUsername(username: string): Promise<UserRecord | null> {
-    const user = await this.prismaService.crmUser.findUnique({
-      where: { username },
-      select: {
-        userId: true,
-        username: true,
-        password: true,
-        email: true,
-        accountStatus: true
-      }
-    })
+    const user = await this.prismaService.readWithRetry(() =>
+      this.prismaService.crmUser.findUnique({
+        where: { username },
+        select: {
+          userId: true,
+          username: true,
+          password: true,
+          email: true,
+          accountStatus: true
+        }
+      })
+    )
     return user
       ? {
           userId: user.userId,

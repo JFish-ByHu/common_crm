@@ -29,6 +29,7 @@ const {
   openEditUser,
   saveUser,
   changeUserStatus,
+  logoutUser,
   deleteSelectedUser,
   deleteSelectedUsers
 } = useUserActions(refreshUserList)
@@ -44,6 +45,8 @@ const executeUserAction = (key: string, row: UserListItem) => {
     detailsVisible.value = true
   } else if (key === 'edit') {
     openEditUser(row)
+  } else if (key === 'logout') {
+    void logoutUser(row)
   } else if (key === 'delete') {
     void deleteSelectedUser(row)
   }
@@ -71,7 +74,7 @@ const executeUserAction = (key: string, row: UserListItem) => {
       :data="users"
       :columns="userColumns"
       :actions="userActions"
-      :action-column="{ width: 140 }"
+      :action-column="{ width: 140, inlineActionCount: 2 }"
       :loading="busy"
       :total="total"
       pagination-mode="server"

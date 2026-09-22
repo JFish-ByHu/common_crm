@@ -170,6 +170,13 @@ const emit = defineEmits<{
   transition: transform var(--crm-transition-fast);
 }
 
+/* 二级菜单文字与带图标的一级目录文字保持同一条起始线。 */
+.sidebar:not(.is-collapsed) :deep(.el-sub-menu > .el-menu > .el-menu-item) {
+  padding-left: calc(
+    var(--el-menu-base-level-padding) + var(--el-menu-icon-width) + 5px
+  ) !important;
+}
+
 .sidebar.is-collapsed {
   width: 64px;
 }

@@ -85,7 +85,7 @@ const actions: TableAction<User>[] = [
 - `action` 事件参数为 `(key, row, index)`，由业务页面执行查看、编辑等行为。默认 actions 为空，不内置业务增删改。
 - 图标支持 Element Plus 名称（`View` / `Edit` / `Delete`）、兼容名称（`el-icon-edit`）或直接传 Vue 图标组件。Element Plus 使用 SVG 图标组件，不依赖字体图标 class。
 - 操作默认显示图标并提供 tooltip；`showLabel: true` 显示图标和文字。`hidden`、`disabled` 支持布尔值或 `(row) => boolean`。
-- `actionColumn` 可配置 `label`、`width`、`fixed`。默认宽 120px、固定在右侧，多操作时可增加宽度。
+- `actionColumn` 可配置 `label`、`width`、`fixed` 和 `inlineActionCount`。默认宽 120px、固定在右侧，默认最多平铺 2 个操作，其余操作收进“更多”菜单；需要平铺更多操作时可增加数量和列宽。
 - `border`、`selection`、`showActions`、`pagination` 均可传 false 关闭。
 - `columns` 支持宽度、对齐、固定、排序、格式化和自定义 slot。`#字段名="{ row, column, index }"` 可自定义单元格，也可通过 `column.slot` 指定 slot 名称。
 - 默认 slot 可直接传 `el-table-column`；另有 `#actions`、`#empty`、`#append` 插槽。其余属性和事件透传给 `el-table`。
