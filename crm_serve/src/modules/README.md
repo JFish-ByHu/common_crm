@@ -31,7 +31,7 @@ modules/iam/
 - 专用技术服务：封装 JWT、文件存储等有明确职责的技术能力。
 - `dto`、`guards`、`decorators`：仅服务当前业务模块时就近放置。
 - `common`：跨业务模块复用的 HTTP 响应等通用代码。
-- `database`：Prisma 等数据库基础设施。
+- `database`：统一组织 MySQL（`mysql/`，通过 Prisma 访问）与 Redis（`redis/`）基础设施，通过 `index.ts` 导出。
 
 新增业务时优先保持这一层级。只有模块的业务复杂度确实增长到需要独立领域模型时，
 才在该模块内部增加更细的领域分层。
@@ -72,5 +72,5 @@ modules/
 ## 在线状态
 
 `modules/iam/presence/` 维护会话级 Redis 在线记录，由认证和用户管理服务共同调用。
-`src/redis/` 提供共享 Redis 连接与故障降级，MySQL 登录会话仍是鉴权依据。
+`src/database/redis/` 提供共享 Redis 连接与故障降级，MySQL 登录会话仍是鉴权依据。
 无需新增表或用户字段，接口与客户端心跳规则见 [用户在线状态](./iam/presence/README.md)。

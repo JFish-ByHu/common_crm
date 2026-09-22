@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { RedisService } from '../../../redis'
+import { RedisService } from '../../../database'
 import type { OnlineStatus } from './types'
 
 const SESSION_TTL_SECONDS = 180

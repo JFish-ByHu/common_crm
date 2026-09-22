@@ -1,9 +1,9 @@
 import { describe, expect, it, jest } from '@jest/globals'
 import type Redis from 'ioredis'
-import type { RedisService } from '../../../redis'
+import type { RedisService } from '../../../database'
 import { PresenceService } from './presence.service'
 
-jest.mock('../../../redis', () => ({
+jest.mock('../../../database', () => ({
   RedisService: class RedisService {}
 }))
 
