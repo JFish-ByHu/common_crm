@@ -4,7 +4,7 @@ import { APP_FILTER } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { PrismaModule } from './database'
-import { AuthModule, RolesModule, UsersModule } from './modules'
+import { AuthModule, RolesModule, UsersModule, AuthorizationModule, MenusModule } from './modules'
 import { HttpExceptionFilter } from './common'
 
 @Module({
@@ -16,7 +16,9 @@ import { HttpExceptionFilter } from './common'
     PrismaModule,
     AuthModule,
     RolesModule,
-    UsersModule
+    UsersModule,
+    AuthorizationModule,
+    MenusModule
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_FILTER, useClass: HttpExceptionFilter }]

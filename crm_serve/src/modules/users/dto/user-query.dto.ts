@@ -1,26 +1,10 @@
+import type { QueryUserListRequest, QueryUserSelectListRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
-import { IsIn, IsInt, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator'
+import { IsIn, IsInt, IsString, MaxLength, ValidateIf } from 'class-validator'
 import { AccountStatus, type AccountStatusValue } from '../types'
-import { queryInteger, trimString } from './transforms'
+import { PaginationDto, queryInteger, trimString } from '../../../common'
 
-/** 两项均省略时不分页；只传一项时，另一项分别使用 1 和 20。 */
-export class UserPaginationDto {
-  @ValidateIf((_object, value) => value !== undefined)
-  @Transform(queryInteger)
-  @IsInt()
-  @Min(1)
-  @Max(2147483647)
-  page?: number
-
-  @ValidateIf((_object, value) => value !== undefined)
-  @Transform(queryInteger)
-  @IsInt()
-  @Min(1)
-  @Max(1000)
-  pageSize?: number
-}
-
-export class UserListQueryDto extends UserPaginationDto {
+export class UserListQueryDto extends PaginationDto implements QueryUserListRequest {
   /** 对 userId、username、email 进行 OR 模糊匹配。 */
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
@@ -36,7 +20,7 @@ export class UserListQueryDto extends UserPaginationDto {
   accountStatus?: AccountStatusValue
 }
 
-export class UserOptionsQueryDto extends UserPaginationDto {
+export class UserOptionsQueryDto extends PaginationDto implements QueryUserSelectListRequest {
   /** 按用户名模糊查询。 */
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)

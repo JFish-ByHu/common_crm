@@ -1,48 +1,53 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Odometer } from '@element-plus/icons-vue'
-import { matchesMicroAppPath } from '@common-crm/router'
-import { microAppModules } from '../../micro-apps'
+import * as Icons from '@element-plus/icons-vue'
+import type { AuthorizedMenu } from '@common-crm/types/api'
+import { useAuthorizationStore } from '../../stores'
 import type { BreadcrumbItem, LayoutMenuItem } from '../components'
 
-const menuItems: LayoutMenuItem[] = [
-  { path: '/dashboard', title: '控制台', icon: Odometer, menuOrder: 10 },
-  ...microAppModules.map(({ manifest, icon, menuOrder }) => ({
-    path: manifest.basePath,
-    title: manifest.title,
-    icon,
-    menuOrder,
-    children: manifest.menu?.map(page => ({
-      path: page.path === '/' ? manifest.basePath : `${manifest.basePath}${page.path}`,
-      title: page.title
-    }))
-  }))
-].sort((left, right) => left.menuOrder - right.menuOrder)
-
-export function useLayoutNavigation() {
+export const useLayoutNavigation = () => {
   const route = useRoute()
-  const activeTrail = computed(() => {
-    const parent = menuItems.find(item => matchesMicroAppPath(route.path, item.path))
-    if (!parent) return []
-
-    const child = parent.children
-      ?.filter(item => matchesMicroAppPath(route.path, item.path))
-      .sort((left, right) => right.path.length - left.path.length)[0]
-
-    return child ? [parent, child] : [parent]
-  })
-
-  const activeMenu = computed(() => activeTrail.value.at(-1)?.path ?? route.path)
-  const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
-    if (!activeTrail.value.length) {
-      return [{ title: (route.meta.title as string) || '控制台' }]
+  const authorization = useAuthorizationStore()
+  const convert = (menus: AuthorizedMenu[], root = true): LayoutMenuItem[] =>
+    menus
+      .filter(menu => menu.visible)
+      .flatMap(menu => {
+        const children = convert(menu.children, false)
+        if (menu.menuType === 'DIRECTORY' && !children.length) return []
+        return [
+          {
+            path: menu.routePath ?? `directory:${menu.menuId}`,
+            title: menu.name,
+            icon: root && menu.icon ? Icons[menu.icon as keyof typeof Icons] : undefined,
+            children: children.length ? children : undefined
+          }
+        ]
+      })
+  const menuItems = computed<LayoutMenuItem[]>(() => [
+    { path: '/dashboard', title: '控制台', icon: Icons.Odometer },
+    ...convert(authorization.state?.menus ?? [])
+  ])
+  const findTrail = (items: LayoutMenuItem[], path: string): LayoutMenuItem[] => {
+    for (const item of items) {
+      if (item.path === path) return [item]
+      const children = findTrail(item.children ?? [], path)
+      if (children.length) return [item, ...children]
     }
-
-    return activeTrail.value.map((item, index, trail) => ({
-      title: item.title,
-      to: index < trail.length - 1 ? item.path : undefined
-    }))
-  })
-
+    return []
+  }
+  const activeTrail = computed(() => findTrail(menuItems.value, route.path))
+  const activeMenu = computed(() => route.path)
+  const breadcrumbItems = computed<BreadcrumbItem[]>(() =>
+    activeTrail.value.length
+      ? activeTrail.value.map(item => ({ title: item.title }))
+      : [
+          {
+            title:
+              authorization.pages.find(page => page.routePath === route.path)?.name ??
+              (route.meta.title as string) ??
+              '控制台'
+          }
+        ]
+  )
   return { menuItems, activeMenu, breadcrumbItems }
 }

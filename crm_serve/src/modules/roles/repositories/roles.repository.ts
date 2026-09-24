@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp } from '../../../common'
+import { currentTimestamp, Result, StatusCode } from '../../../common'
 import { PrismaService } from '../../../database'
 import { RolesError } from '../roles.error'
 import { RoleStatus, type CreateRoleInput, type RoleSearch, type UpdateRoleInput } from '../types'
 
 const roleSelect = {
+  isSystem: true,
   roleId: true,
   roleName: true,
   roleCode: true,
@@ -17,6 +18,7 @@ const roleSelect = {
 } satisfies Prisma.CrmRoleSelect
 
 const optionSelect = {
+  isSystem: true,
   roleId: true,
   roleName: true,
   roleCode: true,
@@ -55,10 +57,23 @@ export class RolesRepository {
 
   update(roleId: string, input: UpdateRoleInput) {
     return this.write(() =>
-      this.prisma.crmRole.update({
-        where: { roleId },
-        data: { ...input, updateTime: currentTimestamp() },
-        select: roleSelect
+      this.prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM crm_authorization_state WHERE id = 1 FOR UPDATE`
+        const role = await tx.crmRole.findUnique({ where: { roleId } })
+        if (role?.isSystem)
+          throw new ForbiddenException(
+            Result.failure(StatusCode.NO_PERMISSION, null, '系统管理角色不可修改')
+          )
+        const result = await tx.crmRole.update({
+          where: { roleId },
+          data: { ...input, updateTime: currentTimestamp() },
+          select: roleSelect
+        })
+        await tx.crmAuthorizationState.update({
+          where: { id: 1 },
+          data: { revision: { increment: 1 } }
+        })
+        return result
       })
     )
   }
@@ -67,6 +82,11 @@ export class RolesRepository {
   deleteMany(roleIds: string[]) {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        await transaction.$queryRaw`SELECT id FROM crm_authorization_state WHERE id = 1 FOR UPDATE`
+        if (await transaction.crmRole.count({ where: { roleId: { in: roleIds }, isSystem: true } }))
+          throw new ForbiddenException(
+            Result.failure(StatusCode.NO_PERMISSION, null, '系统管理角色不可删除')
+          )
         const roles = await transaction.$queryRaw<{ roleId: string }[]>(Prisma.sql`
         SELECT roleId FROM crm_roles WHERE roleId IN (${Prisma.join(roleIds)}) ORDER BY roleId FOR UPDATE
       `)
@@ -74,6 +94,10 @@ export class RolesRepository {
         const assigned = await transaction.crmUserRole.count({ where: { roleId: { in: roleIds } } })
         if (assigned) throw new RolesError('ROLE_IN_USE')
         const result = await transaction.crmRole.deleteMany({ where: { roleId: { in: roleIds } } })
+        await transaction.crmAuthorizationState.update({
+          where: { id: 1 },
+          data: { revision: { increment: 1 } }
+        })
         return { deletedCount: result.count }
       })
     )
@@ -97,6 +121,19 @@ export class RolesRepository {
   assignUserRoles(userId: string, roleIds: string[]) {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        await transaction.$queryRaw`SELECT id FROM crm_authorization_state WHERE id = 1 FOR UPDATE`
+        const systemRoles = await transaction.crmRole.findMany({
+          where: { isSystem: true },
+          select: { roleId: true, users: { where: { userId }, select: { userId: true } } }
+        })
+        if (systemRoles.some(role => roleIds.includes(role.roleId) !== role.users.length > 0))
+          throw new ForbiddenException(
+            Result.failure(
+              StatusCode.NO_PERMISSION,
+              null,
+              '系统管理角色的成员关系不可通过业务接口修改'
+            )
+          )
         const users = await transaction.$queryRaw<{ userId: string }[]>`
         SELECT userId FROM crm_users WHERE userId = ${userId} FOR UPDATE
       `
@@ -134,6 +171,10 @@ export class RolesRepository {
           where: { roleId: { in: roleIds } },
           select: optionSelect,
           orderBy: { roleId: 'asc' }
+        })
+        await transaction.crmAuthorizationState.update({
+          where: { id: 1 },
+          data: { revision: { increment: 1 } }
         })
         return { userId, roles }
       })

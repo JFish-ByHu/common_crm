@@ -1,24 +1,11 @@
+import type { QueryRoleListRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
-import { IsIn, IsInt, IsString, Max, MaxLength, Min, ValidateIf } from 'class-validator'
+import { IsIn, IsInt, IsString, MaxLength, ValidateIf } from 'class-validator'
 import { RoleStatus, type RoleStatusValue } from '../types'
-import { queryInteger, trimString } from './transforms'
+import { PaginationDto, queryInteger, trimString } from '../../../common'
 
 /** 不传分页参数查询全部；只传一项时另一项分别默认 1、20。 */
-export class RoleQueryDto {
-  @ValidateIf((_object, value) => value !== undefined)
-  @Transform(queryInteger)
-  @IsInt()
-  @Min(1)
-  @Max(2147483647)
-  page?: number
-
-  @ValidateIf((_object, value) => value !== undefined)
-  @Transform(queryInteger)
-  @IsInt()
-  @Min(1)
-  @Max(1000)
-  pageSize?: number
-
+export class RoleQueryDto extends PaginationDto implements QueryRoleListRequest {
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
   @IsString()

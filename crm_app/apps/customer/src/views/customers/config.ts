@@ -19,5 +19,5 @@ export const customerColumns: TableColumn<CustomerListItem>[] = [
 ]
 
 export const customerActions: TableAction<CustomerListItem>[] = [
-  { key: 'view', label: '查看详情', icon: 'View' }
+  { key: 'view', label: '查看详情', icon: 'View', permission: 'customer:details:view' }
 ]

@@ -24,29 +24,4 @@ export interface ApiRequestConfig<D = unknown> extends AxiosRequestConfig<D> {
 
 export type ApiErrorKind = 'business' | 'http' | 'network' | 'timeout' | 'protocol' | 'unknown'
 
-/**
- * API 统一响应结构
- */
-export interface ApiResponse<T = unknown> {
-  code: number
-  data: T | null
-  msg: string
-}
-
-/**
- * 分页请求参数
- */
-export interface PageRequest {
-  page: number
-  pageSize: number
-}
-
-/**
- * 分页响应数据
- */
-export interface PageResponse<T> {
-  list: T[]
-  total: number
-  page: number
-  pageSize: number
-}
+export type { ApiResponse, PageRequest, PageResponse } from '@common-crm/types/api'

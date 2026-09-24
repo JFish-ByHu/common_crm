@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { RedisService } from '../../database'
-import type { OnlineStatus } from './types'
+import type { UserOnlineStatus } from './types'
 
 const SESSION_TTL_SECONDS = 180
 const BATCH_SIZE = 100
@@ -17,9 +17,9 @@ export class PresenceService {
     return result === 'OK'
   }
 
-  async querySessions(sessionIds: string[]): Promise<Map<string, OnlineStatus>> {
+  async querySessions(sessionIds: string[]): Promise<Map<string, UserOnlineStatus>> {
     const uniqueIds = [...new Set(sessionIds)]
-    const statuses = new Map<string, OnlineStatus>(uniqueIds.map(id => [id, null]))
+    const statuses = new Map<string, UserOnlineStatus>(uniqueIds.map(id => [id, null]))
     for (let offset = 0; offset < uniqueIds.length; offset += BATCH_SIZE) {
       const batch = uniqueIds.slice(offset, offset + BATCH_SIZE)
       const results = await this.redis.execute(client => {

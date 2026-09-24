@@ -19,6 +19,8 @@ export interface TableAction<Row extends object = Record<string, unknown>> {
   key: string
   label: string
   icon?: keyof typeof ElementPlusIcons | `el-icon-${string}` | Component
+  /** 配合表格 hasPermission 判断权限；未配置时不做权限过滤。 */
+  permission?: string
   type?: ButtonProps['type']
   showLabel?: boolean
   disabled?: boolean | ((row: Row) => boolean)

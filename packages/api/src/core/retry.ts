@@ -6,7 +6,6 @@ type RetryRequestConfig = InternalAxiosRequestConfig & Pick<ApiRequestConfig, 'r
 
 const waitForRetry = (delayMs: number, config: RetryRequestConfig): Promise<void> =>
   new Promise((resolve, reject) => {
-    let timer: ReturnType<typeof setTimeout> | undefined
     const clearWaiting = () => {
       clearTimeout(timer)
       config.signal?.removeEventListener?.('abort', cancelWaiting)
@@ -16,16 +15,16 @@ const waitForRetry = (delayMs: number, config: RetryRequestConfig): Promise<void
       clearWaiting()
       reject(new axios.CanceledError('Request canceled while waiting for backend', config))
     }
-    config.signal?.addEventListener?.('abort', cancelWaiting)
-    config.cancelToken?.subscribe(cancelWaiting)
+    const timer = setTimeout(() => {
+      clearWaiting()
+      resolve()
+    }, delayMs)
     if (config.signal?.aborted || config.cancelToken?.reason) {
       cancelWaiting()
       return
     }
-    timer = setTimeout(() => {
-      clearWaiting()
-      resolve()
-    }, delayMs)
+    config.signal?.addEventListener?.('abort', cancelWaiting)
+    config.cancelToken?.subscribe(cancelWaiting)
   })
 
 /** 仅重试开发代理明确标记的暂时不可用响应，保留业务错误和写操作的原有语义。 */

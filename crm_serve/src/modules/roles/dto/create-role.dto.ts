@@ -1,3 +1,4 @@
+import type { CreateRoleRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import {
   IsIn,
@@ -10,9 +11,10 @@ import {
   ValidateIf
 } from 'class-validator'
 import { RoleStatus, type RoleStatusValue } from '../types'
-import { normalizeRemark, trimString } from './transforms'
+import { trimString } from '../../../common'
+import { normalizeRemark } from './transforms'
 
-export class CreateRoleDto {
+export class CreateRoleDto implements CreateRoleRequest {
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()

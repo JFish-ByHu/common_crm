@@ -1,45 +1,35 @@
 import { request } from '../core'
-import type { ApiRequestConfig, ApiResponse, PageRequest } from '../types'
+import type { ApiRequestConfig, ApiResponse } from '../types'
 
-export type RoleStatus = 0 | 1
-export interface RoleSelectItem {
-  roleId: string
-  roleName: string
-  roleCode: string
-  roleStatus: RoleStatus
-}
-export interface RoleListItem extends RoleSelectItem {
-  remark: string | null
-  memberCount: number
-  createTime: string
-  updateTime: string
-}
-export interface QueryRoleListRequest extends Partial<PageRequest> {
-  keyword?: string
-  roleStatus?: RoleStatus
-}
-export interface RoleListResponse<T = RoleListItem> {
-  list: T[]
-  total: number
-  page: number | null
-  pageSize: number | null
-}
-export interface CreateRoleRequest {
-  roleName: string
-  roleCode: string
-  roleStatus?: RoleStatus
-  remark?: string | null
-}
-export interface UpdateRoleRequest {
-  roleId: string
-  roleName?: string
-  roleStatus?: RoleStatus
-  remark?: string | null
-}
-export interface UserRolesResponse {
-  userId: string
-  roles: RoleSelectItem[]
-}
+import type {
+  DeleteCountResponse,
+  UpdateRoleStatusRequest,
+  DeleteRoleRequest,
+  BatchDeleteRolesRequest,
+  AssignUserRolesRequest,
+  RoleSelectItem,
+  RoleListItem,
+  QueryRoleListRequest,
+  RoleListResponse,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  UserRolesResponse
+} from '@common-crm/types/api'
+export type {
+  RoleStatus,
+  RoleSelectItem,
+  RoleListItem,
+  QueryRoleListRequest,
+  RoleListResponse,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  UserRolesResponse,
+  UpdateRoleStatusRequest,
+  DeleteRoleRequest,
+  BatchDeleteRolesRequest,
+  AssignUserRolesRequest
+} from '@common-crm/types/api'
+
 type QueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
 
 /** 不传分页参数时查询全部角色。 */
@@ -72,21 +62,18 @@ export const createRole = (data: CreateRoleRequest): Promise<ApiResponse<RoleLis
 export const updateRole = (data: UpdateRoleRequest): Promise<ApiResponse<RoleListItem>> =>
   request<RoleListItem, UpdateRoleRequest>({ url: '/roles/update', method: 'patch', data })
 
-export const updateRoleStatus = (data: {
-  roleId: string
-  roleStatus: RoleStatus
-}): Promise<ApiResponse<RoleListItem>> =>
+export const updateRoleStatus = (
+  data: UpdateRoleStatusRequest
+): Promise<ApiResponse<RoleListItem>> =>
   request<RoleListItem>({ url: '/roles/updateRoleStatus', method: 'patch', data })
 
-export const deleteRole = (data: {
-  roleId: string
-}): Promise<ApiResponse<{ deletedCount: number }>> =>
-  request<{ deletedCount: number }>({ url: '/roles/delete', method: 'delete', data })
+export const deleteRole = (data: DeleteRoleRequest): Promise<ApiResponse<DeleteCountResponse>> =>
+  request<DeleteCountResponse>({ url: '/roles/delete', method: 'delete', data })
 
-export const batchDeleteRoles = (data: {
-  roleIds: string[]
-}): Promise<ApiResponse<{ deletedCount: number }>> =>
-  request<{ deletedCount: number }>({ url: '/roles/batchDelete', method: 'delete', data })
+export const batchDeleteRoles = (
+  data: BatchDeleteRolesRequest
+): Promise<ApiResponse<DeleteCountResponse>> =>
+  request<DeleteCountResponse>({ url: '/roles/batchDelete', method: 'delete', data })
 
 export const queryUserRoles = (
   userId: string,
@@ -95,8 +82,7 @@ export const queryUserRoles = (
   request<UserRolesResponse>({ ...config, url: '/users/roles', method: 'get', params: { userId } })
 
 /** 完整替换用户的角色集合；空数组解除全部分配。 */
-export const assignUserRoles = (data: {
-  userId: string
-  roleIds: string[]
-}): Promise<ApiResponse<UserRolesResponse>> =>
+export const assignUserRoles = (
+  data: AssignUserRolesRequest
+): Promise<ApiResponse<UserRolesResponse>> =>
   request<UserRolesResponse>({ url: '/users/assignRoles', method: 'patch', data })

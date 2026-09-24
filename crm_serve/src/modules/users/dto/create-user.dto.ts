@@ -1,3 +1,4 @@
+import type { CreateUserRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import {
   IsByteLength,
@@ -12,9 +13,10 @@ import {
   ValidateIf
 } from 'class-validator'
 import { AccountStatus, type AccountStatusValue } from '../types'
-import { normalizeEmail, trimString } from './transforms'
+import { trimString } from '../../../common'
+import { normalizeEmail } from './transforms'
 
-export class CreateUserDto {
+export class CreateUserDto implements CreateUserRequest {
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()

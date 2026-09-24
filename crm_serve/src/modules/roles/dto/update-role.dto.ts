@@ -1,3 +1,4 @@
+import type { UpdateRoleRequest, UpdateRoleStatusRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import {
   IsIn,
@@ -10,9 +11,10 @@ import {
 } from 'class-validator'
 import { RoleStatus, type RoleStatusValue } from '../types'
 import { RoleIdDto } from './role-id.dto'
-import { normalizeRemark, trimString } from './transforms'
+import { trimString } from '../../../common'
+import { normalizeRemark } from './transforms'
 
-export class UpdateRoleDto extends RoleIdDto {
+export class UpdateRoleDto extends RoleIdDto implements UpdateRoleRequest {
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
   @IsString()
@@ -32,7 +34,7 @@ export class UpdateRoleDto extends RoleIdDto {
   remark?: string | null
 }
 
-export class UpdateRoleStatusDto extends RoleIdDto {
+export class UpdateRoleStatusDto extends RoleIdDto implements UpdateRoleStatusRequest {
   @IsInt()
   @IsIn(Object.values(RoleStatus))
   roleStatus!: RoleStatusValue

@@ -25,6 +25,7 @@ const props = withDefaults(
     data: Row[]
     columns?: TableColumn<Row>[]
     actions?: TableAction<Row>[]
+    hasPermission?: (permission: string) => boolean
     actionColumn?: TableActionColumn
     showActions?: boolean
     border?: boolean
@@ -41,6 +42,7 @@ const props = withDefaults(
   {
     columns: () => [],
     actions: () => [],
+    hasPermission: undefined,
     actionColumn: () => ({}),
     showActions: true,
     border: true,
@@ -74,13 +76,13 @@ const visibleRows = computed(() => {
   return props.data.slice(start, start + pageSize.value)
 })
 
-function changePage(page: number) {
+const changePage = (page: number) => {
   if (page === currentPage.value) return
   currentPage.value = page
   emit('page-change', { currentPage: page, pageSize: pageSize.value })
 }
 
-function changePageSize(size: number) {
+const changePageSize = (size: number) => {
   if (size === pageSize.value) return
   pageSize.value = size
   currentPage.value = 1
@@ -95,18 +97,18 @@ watch([totalRows, pageSize], () => {
   }
 })
 
-function isDisabled(action: TableAction<Row>, row: Row) {
+const isDisabled = (action: TableAction<Row>, row: Row) => {
   return (
     props.loading ||
     (typeof action.disabled === 'function' ? action.disabled(row) : action.disabled)
   )
 }
 
-function rowActions(row: Row) {
-  return props.actions.filter(
-    action => !(typeof action.hidden === 'function' ? action.hidden(row) : action.hidden)
-  )
-}
+const isVisible = (action: TableAction<Row>, row: Row) =>
+  (action.permission === undefined || props.hasPermission?.(action.permission) === true) &&
+  !(typeof action.hidden === 'function' ? action.hidden(row) : action.hidden)
+
+const rowActions = (row: Row) => props.actions.filter(action => isVisible(action, row))
 
 const inlineActions = (row: Row) => {
   return rowActions(row).slice(0, Math.max(0, props.actionColumn.inlineActionCount ?? 2))
@@ -117,7 +119,9 @@ const overflowActions = (row: Row) => {
 }
 
 const emitAction = (action: TableAction<Row>, row: Row, index: number) => {
-  if (!isDisabled(action, row)) emit('action', action.key, row, index)
+  if (props.actions.includes(action) && isVisible(action, row) && !isDisabled(action, row)) {
+    emit('action', action.key, row, index)
+  }
 }
 
 const emitOverflowAction = (command: { action: TableAction<Row>; row: Row; index: number }) => {

@@ -1,3 +1,4 @@
+import type { AssignUserRolesRequest } from '@common-crm/types/api'
 import {
   ArrayMaxSize,
   ArrayUnique,
@@ -8,7 +9,7 @@ import {
 } from 'class-validator'
 import { UserIdDto } from './user-id.dto'
 
-export class AssignUserRolesDto extends UserIdDto {
+export class AssignUserRolesDto extends UserIdDto implements AssignUserRolesRequest {
   /** 完整替换；允许空数组解除全部分配。 */
   @IsArray()
   @ArrayMaxSize(1000)

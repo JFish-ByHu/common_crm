@@ -20,6 +20,7 @@ export class AccessTokenGuard implements CanActivate {
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
+    if (request.user) return true
     const token = this.extractBearerToken(request.headers.authorization)
     if (!token) this.throwUnauthorized()
 

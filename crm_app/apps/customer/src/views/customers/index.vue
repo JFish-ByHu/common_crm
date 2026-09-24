@@ -5,13 +5,14 @@ import { CustomerDetails } from './components'
 import { customerActions, customerColumns, customerFilterFields } from './config'
 import { useCustomerList } from './hooks'
 import type { CustomerListItem } from './types'
+import { authorization } from '../../services'
 
 const { filters, visibleCustomers, currentPage, pageSize, applyFilters, resetFilters } =
   useCustomerList()
 const detailsVisible = ref(false)
 const selectedCustomer = ref<CustomerListItem | null>(null)
 
-function handleAction(key: string, row: CustomerListItem) {
+const executeCustomerAction = (key: string, row: CustomerListItem) => {
   if (key === 'view') {
     selectedCustomer.value = row
     detailsVisible.value = true
@@ -33,9 +34,10 @@ function handleAction(key: string, row: CustomerListItem) {
       :data="visibleCustomers"
       :columns="customerColumns"
       :actions="customerActions"
+      :has-permission="authorization.hasPermission"
       row-key="customerId"
       empty-text="暂无客户数据"
-      @action="handleAction"
+      @action="executeCustomerAction"
     />
     <CustomerDetails v-model="detailsVisible" :customer="selectedCustomer" />
   </section>

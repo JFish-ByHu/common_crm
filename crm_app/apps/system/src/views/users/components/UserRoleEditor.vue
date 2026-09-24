@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Check, Close } from '@element-plus/icons-vue'
-import type { RoleSelectItem } from '../../../services'
+import type { RoleSelectItem } from '@common-crm/types/api'
 import type { UserListItem } from '../types'
 
 const props = defineProps<{
@@ -54,7 +54,7 @@ const closeRoleEditor = () => {
               :key="role.roleId"
               :value="role.roleId"
               :label="`${role.roleName}（${role.roleCode}）${role.roleStatus === 0 ? ' · 已停用' : ''}`"
-              :disabled="role.roleStatus === 0 && !assignedIds.has(role.roleId)"
+              :disabled="role.isSystem || (role.roleStatus === 0 && !assignedIds.has(role.roleId))"
             />
           </el-select>
         </el-form-item>

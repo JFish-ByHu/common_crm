@@ -1,6 +1,7 @@
+import type { ApiResponse } from '@common-crm/types/api'
 import { StatusCode, type StatusDefinition } from './status-code'
 
-export class Result<T = unknown> {
+export class Result<T = unknown> implements ApiResponse<T> {
   constructor(
     public readonly code: number,
     public readonly data: T | null,

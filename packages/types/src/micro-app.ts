@@ -1,3 +1,5 @@
+import type { CurrentAuthorization } from './api/index.js'
+
 export type ThemeMode = 'light' | 'dark'
 
 export interface SharedAuthState {
@@ -23,6 +25,8 @@ export interface MicroAppProps {
   appName?: string
   container?: Element
   getAuthState?: () => SharedAuthState
+  /** Share Alpha's session-scoped snapshot; force refresh after permission mutations. */
+  getAuthorization?: (force?: boolean) => Promise<CurrentAuthorization>
   getThemeState?: () => SharedThemeState
   eventBus?: MicroAppEventBus
   navigation?: MicroAppNavigation

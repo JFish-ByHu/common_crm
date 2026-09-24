@@ -1,6 +1,7 @@
-import { createMicroAppRouter } from '@common-crm/router'
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
-import { getMicroAppProps, systemManifest, systemPages } from '../micro-app'
+import { createMicroAppRouter, installPermissionRoutes } from '@common-crm/router'
+import { CrmAccessResult } from '@common-crm/components'
+import { getMicroAppProps, systemManifest } from '../micro-app'
+import { authorization, ensureAuthorization } from '../services'
 
 export const createSystemRouter = () => {
   const result = createMicroAppRouter({
@@ -8,38 +9,24 @@ export const createSystemRouter = () => {
     navigation: getMicroAppProps().navigation,
     routes: [
       {
-        path: '/',
-        redirect: systemPages.users.path
+        path: '/access-denied',
+        name: 'access-denied',
+        component: CrmAccessResult,
+        props: route => ({ unavailable: route.query.unavailable === '1' })
       },
-      {
-        path: systemPages.users.path,
-        name: 'system-users',
-        component: () => import('../views/users/index.vue'),
-        meta: { requiresAuth: true, title: systemPages.users.title }
-      },
-      {
-        path: systemPages.roles.path,
-        name: 'system-roles',
-        component: () => import('../views/roles/index.vue'),
-        meta: { requiresAuth: true, title: systemPages.roles.title }
-      },
-      {
-        path: '/:pathMatch(.*)*',
-        redirect: systemPages.users.path
-      }
+      { path: '/:pathMatch(.*)*', component: CrmAccessResult }
     ]
   })
-
-  result.router.beforeEach(to => {
-    if (!qiankunWindow.__POWERED_BY_QIANKUN__) return
-
-    const authState = getMicroAppProps().getAuthState?.()
-    if (!authState?.isAuthenticated && to.meta.requiresAuth !== false) {
-      const redirect = window.location.pathname + window.location.search + window.location.hash
-      window.location.replace('/login?redirect=' + encodeURIComponent(redirect))
-      return false
+  installPermissionRoutes({
+    router: result.router,
+    basePath: systemManifest.basePath,
+    refresh: ensureAuthorization,
+    pages: () => authorization.pages.value,
+    components: {
+      'system-users': () => import('../views/users/index.vue'),
+      'system-roles': () => import('../views/roles/index.vue'),
+      'system-menus': () => import('../views/menus/index.vue')
     }
   })
-
   return result
 }

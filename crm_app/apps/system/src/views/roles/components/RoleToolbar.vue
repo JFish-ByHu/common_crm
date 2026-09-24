@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { Delete, Plus } from '@element-plus/icons-vue'
 
-defineProps<{ selectedCount: number; disabled: boolean }>()
+defineProps<{ selectedCount: number; disabled: boolean; canCreate: boolean; canDelete: boolean }>()
 defineEmits<{ create: []; deleteSelected: [] }>()
 </script>
 
 <template>
   <div class="role-toolbar">
-    <el-button type="primary" :icon="Plus" :disabled="disabled" @click="$emit('create')">
+    <el-button
+      v-if="canCreate"
+      type="primary"
+      :icon="Plus"
+      :disabled="disabled"
+      @click="$emit('create')"
+    >
       新增角色
     </el-button>
     <el-button
+      v-if="canDelete"
       type="danger"
       plain
       :icon="Delete"

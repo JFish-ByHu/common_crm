@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards
 } from '@nestjs/common'
 import { AccessTokenGuard } from '../auth'
@@ -84,8 +85,10 @@ export class UsersController {
    * @returns 编辑后的公开资料
    */
   @Patch('update')
-  update(@Body() command: UpdateUserDto) {
-    return this.presenter.present(() => this.usersService.update(command.userId, command))
+  update(@Body() command: UpdateUserDto, @Req() request: { user: { userId: string } }) {
+    return this.presenter.present(() =>
+      this.usersService.update(command.userId, command, request.user.userId)
+    )
   }
 
   /**

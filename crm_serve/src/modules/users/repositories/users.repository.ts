@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { ForbiddenException, Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp } from '../../../common'
+import { currentTimestamp, Result, StatusCode } from '../../../common'
 import { PrismaService } from '../../../database'
 import { UsersError } from '../users.error'
 import {
@@ -71,9 +71,11 @@ export class UsersRepository {
   }
 
   /** 资料、账号状态与会话撤销使用同一事务，防止部分更新。 */
-  update(userId: string, input: UpdateUserInput): Promise<StoredUserListItem> {
+  update(userId: string, input: UpdateUserInput, actorId?: string): Promise<StoredUserListItem> {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        if (actorId !== userId || input.accountStatus === AccountStatus.DISABLED)
+          await this.assertNotSystemUser(transaction, [userId])
         const now = currentTimestamp()
         const user = await transaction.crmUser.update({
           where: { userId },
@@ -101,6 +103,8 @@ export class UsersRepository {
   updateStatus(userId: string, accountStatus: AccountStatusValue): Promise<StoredUserListItem> {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        if (accountStatus === AccountStatus.DISABLED)
+          await this.assertNotSystemUser(transaction, [userId])
         const now = currentTimestamp()
         const user = await transaction.crmUser.update({
           where: { userId },
@@ -120,16 +124,14 @@ export class UsersRepository {
 
   /** 物理删除，关联会话由数据库外键 ON DELETE CASCADE 清理。 */
   delete(userId: string): Promise<{ deletedCount: number }> {
-    return this.write(async () => {
-      await this.prisma.crmUser.delete({ where: { userId }, select: { userId: true } })
-      return { deletedCount: 1 }
-    })
+    return this.deleteMany([userId])
   }
 
   /** 批量删除全部成功或全部回滚，不静默忽略不存在的 ID。 */
   deleteMany(userIds: string[]): Promise<{ deletedCount: number }> {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        await this.assertNotSystemUser(transaction, userIds)
         const { count } = await transaction.crmUser.deleteMany({
           where: { userId: { in: userIds } }
         })
@@ -137,6 +139,20 @@ export class UsersRepository {
         return { deletedCount: count }
       })
     )
+  }
+
+  private async assertNotSystemUser(transaction: Prisma.TransactionClient, userIds: string[]) {
+    const count = await transaction.crmUserRole.count({
+      where: { userId: { in: userIds }, role: { isSystem: true } }
+    })
+    if (count)
+      throw new ForbiddenException(
+        Result.failure(
+          StatusCode.NO_PERMISSION,
+          null,
+          '系统管理员账号不能停用、删除或被其他用户修改'
+        )
+      )
   }
 
   private async query<Select extends Prisma.CrmUserSelect>(

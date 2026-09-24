@@ -1,3 +1,4 @@
+import type { BatchDeleteUsersRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import {
   ArrayMaxSize,
@@ -10,7 +11,7 @@ import {
 } from 'class-validator'
 import { trimUserIds } from './transforms'
 
-export class DeleteUsersDto {
+export class DeleteUsersDto implements BatchDeleteUsersRequest {
   /** 1 至 1000 个不重复的用户 ID，全部存在时才执行删除。 */
   @Transform(trimUserIds)
   @IsArray()

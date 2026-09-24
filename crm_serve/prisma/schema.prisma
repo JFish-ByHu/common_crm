@@ -29,7 +29,7 @@ model CrmAuthSession {
   revokedAt  BigInt? @db.UnsignedBigInt
   createTime BigInt  @db.UnsignedBigInt
   updateTime BigInt  @db.UnsignedBigInt
-  user       CrmUser @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  user       CrmUser @relation(fields: [userId], references: [userId], onDelete: Cascade, map: "fk_crm_auth_sessions_user_id")
 
   @@index([userId], map: "idx_crm_auth_sessions_user_id")
   @@index([expiresAt], map: "idx_crm_auth_sessions_expires_at")
@@ -37,14 +37,17 @@ model CrmAuthSession {
 }
 
 model CrmRole {
-  roleId     String        @id @db.VarChar(64)
-  roleName   String        @db.VarChar(64)
-  roleCode   String        @unique(map: "uk_crm_roles_code") @db.VarChar(64)
-  roleStatus Int           @default(1) @db.UnsignedTinyInt
-  remark     String?       @db.VarChar(255)
-  createTime BigInt        @db.UnsignedBigInt
-  updateTime BigInt        @db.UnsignedBigInt
+  roleId     String              @id @db.VarChar(64)
+  roleName   String              @db.VarChar(64)
+  roleCode   String              @unique(map: "uk_crm_roles_code") @db.VarChar(64)
+  roleStatus Int                 @default(1) @db.UnsignedTinyInt
+  remark     String?             @db.VarChar(255)
+  createTime BigInt              @db.UnsignedBigInt
+  updateTime BigInt              @db.UnsignedBigInt
   users      CrmUserRole[]
+  isSystem   Boolean             @default(false)
+  menus      CrmRoleMenu[]
+  actions    CrmRoleMenuAction[]
 
   @@index([roleStatus, createTime], map: "idx_crm_roles_status_created")
   @@map("crm_roles")
@@ -60,4 +63,96 @@ model CrmUserRole {
   @@id([userId, roleId])
   @@index([roleId], map: "idx_crm_user_roles_role")
   @@map("crm_user_roles")
+}
+
+model CrmMenu {
+  menuId         String          @id @db.VarChar(64)
+  parentId       String?         @db.VarChar(64)
+  menuType       String          @db.VarChar(16)
+  name           String          @db.VarChar(64)
+  permissionCode String          @unique @db.VarChar(128)
+  routePath      String?         @unique @db.VarChar(255)
+  componentKey   String?         @unique @db.VarChar(128)
+  icon           String?         @db.VarChar(64)
+  sortOrder      Int             @default(0)
+  visible        Boolean         @default(true)
+  enabled        Boolean         @default(true)
+  createTime     BigInt          @db.UnsignedBigInt
+  updateTime     BigInt          @db.UnsignedBigInt
+  parent         CrmMenu?        @relation("MenuTree", fields: [parentId], references: [menuId], onDelete: Restrict, onUpdate: Restrict)
+  children       CrmMenu[]       @relation("MenuTree")
+  actions        CrmMenuAction[]
+  roles          CrmRoleMenu[]
+
+  @@index([parentId, sortOrder])
+  @@map("crm_menus")
+}
+
+model CrmMenuAction {
+  actionId       String                 @id @db.VarChar(64)
+  menuId         String                 @db.VarChar(64)
+  name           String                 @db.VarChar(64)
+  permissionCode String                 @unique @db.VarChar(128)
+  sortOrder      Int                    @default(0)
+  enabled        Boolean                @default(true)
+  createTime     BigInt                 @db.UnsignedBigInt
+  updateTime     BigInt                 @db.UnsignedBigInt
+  menu           CrmMenu                @relation(fields: [menuId], references: [menuId], onDelete: Restrict)
+  rules          CrmApiPermissionRule[]
+  roles          CrmRoleMenuAction[]
+
+  @@index([menuId])
+  @@map("crm_menu_actions")
+}
+
+model CrmApiPermissionRule {
+  ruleId     String        @id @db.VarChar(64)
+  actionId   String        @db.VarChar(64)
+  httpMethod String        @db.VarChar(8)
+  path       String        @db.VarChar(255)
+  action     CrmMenuAction @relation(fields: [actionId], references: [actionId], onDelete: Cascade)
+
+  @@unique([httpMethod, path])
+  @@map("crm_api_permission_rules")
+}
+
+model CrmRoleMenu {
+  roleId String  @db.VarChar(64)
+  menuId String  @db.VarChar(64)
+  role   CrmRole @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+  menu   CrmMenu @relation(fields: [menuId], references: [menuId], onDelete: Cascade)
+
+  @@id([roleId, menuId])
+  @@index([menuId])
+  @@map("crm_role_menus")
+}
+
+model CrmRoleMenuAction {
+  roleId   String        @db.VarChar(64)
+  actionId String        @db.VarChar(64)
+  role     CrmRole       @relation(fields: [roleId], references: [roleId], onDelete: Cascade)
+  action   CrmMenuAction @relation(fields: [actionId], references: [actionId], onDelete: Cascade)
+
+  @@id([roleId, actionId])
+  @@index([actionId])
+  @@map("crm_role_menu_actions")
+}
+
+model CrmAuthorizationState {
+  id       Int    @id
+  revision BigInt @default(1) @db.UnsignedBigInt
+
+  @@map("crm_authorization_state")
+}
+
+model CrmPermissionAudit {
+  auditId    String @id @db.VarChar(64)
+  actorId    String @db.VarChar(64)
+  operation  String @db.VarChar(64)
+  targetId   String @db.VarChar(64)
+  detail     Json
+  createTime BigInt @db.UnsignedBigInt
+
+  @@index([createTime])
+  @@map("crm_permission_audits")
 }

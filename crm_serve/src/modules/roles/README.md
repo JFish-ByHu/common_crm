@@ -1,13 +1,15 @@
 # 角色管理
 
 本阶段实现角色增删改查、启停和用户角色分配，一个用户可关联多个角色。
+公开请求与响应类型统一来自 `@common-crm/types/api`；分页 DTO 和默认值复用后端 `common/pagination`。
 模块位于 `src/modules/roles/`，与 `users/`、`auth/`、`presence/` 同级，按 Controller → Service → Repository 组织。
 `roles.module.ts`、`roles.controller.ts` 和 `roles-result.presenter.ts` 保留在根目录，
 具体业务实现位于 `services/`、`repositories/`；请求校验放在 `dto/`，实现目录均提供统一入口。
 
 所有接口要求有效的 `Authorization: Bearer <accessToken>`，响应为 `{ code, data, msg }`。
-当前仅校验登录会话，尚未根据角色限制接口访问；角色名称、编码和用户 ID 前缀均不授予管理权限。
-分配角色、停用角色不会影响现有登录会话或菜单展示。
+业务接口通过全局权限守卫校验角色授权；角色名称、编码和用户 ID 前缀均不授予管理权限。
+分配角色、停用角色会更新权限版本，后续请求重新计算有效权限；登录会话本身保留。
+菜单授权接口和保留管理角色约束见 [菜单管理](../menus/README.md)。
 
 ## 数据模型
 
@@ -26,7 +28,7 @@
 
 删除用户级联清理角色关联；删除角色受外键限制，必须先解除全部用户关联。
 角色状态和创建时间有组合索引；关联表另有 `roleId` 索引，支持成员统计和反向查询。
-本阶段没有默认内置角色，现有用户的角色集合初始为空。
+菜单权限迁移新增受保护的平台管理角色（`isSystem = true`），并将迁移时已有的 `admin` 账号绑定到该角色。
 
 ## 接口
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
-import { RoleDetails, RoleEditor, RoleToolbar } from './components'
+import { RoleDetails, RoleEditor, RoleToolbar, RolePermissions } from './components'
+import { authorization } from '../../services'
 import { roleActions, roleColumns, roleFilterFields } from './config'
 import { useRoleActions, useRoleDetails, useRoleList } from './hooks'
 import type { RoleListItem } from './types'
@@ -34,12 +35,19 @@ const {
 const { detailsVisible, detailRole, detailLoading, openRoleDetails, loadRoleDetails } =
   useRoleDetails()
 const busy = computed(() => loading.value || saving.value || mutating.value)
+const can = authorization.hasPermission
+const permissionVisible = ref(false)
+const permissionRole = ref<RoleListItem | null>(null)
 
 const executeRoleAction = (key: string, row: RoleListItem) => {
   if (busy.value) return
   if (key === 'view') openRoleDetails(row)
   else if (key === 'edit') openEditRole(row)
   else if (key === 'delete') void deleteSelectedRole(row)
+  else if (key === 'assignPermissions') {
+    permissionRole.value = row
+    permissionVisible.value = true
+  }
 }
 </script>
 
@@ -53,6 +61,8 @@ const executeRoleAction = (key: string, row: RoleListItem) => {
       @reset="resetRoleFilters"
     />
     <RoleToolbar
+      :can-create="can('system:roles:create')"
+      :can-delete="can('system:roles:batchDelete')"
       :selected-count="selectedRoles.length"
       :disabled="busy"
       @create="openCreateRole"
@@ -64,6 +74,7 @@ const executeRoleAction = (key: string, row: RoleListItem) => {
       :data="roles"
       :columns="roleColumns"
       :actions="roleActions"
+      :has-permission="can"
       :action-column="{ width: 140, inlineActionCount: 2 }"
       :loading="busy"
       :total="total"
@@ -80,13 +91,14 @@ const executeRoleAction = (key: string, row: RoleListItem) => {
           :active-value="1"
           :inactive-value="0"
           :before-change="() => changeRoleStatus(row)"
-          :disabled="busy"
+          :disabled="busy || row.isSystem || !can('system:roles:updateRoleStatus')"
           class="role-status-switch"
           :aria-label="`${row.roleName}的角色状态：${row.roleStatus === 1 ? '启用' : '停用'}`"
         />
       </template>
     </CrmTable>
     <RoleEditor v-model="editorVisible" :role="editingRole" :saving="saving" @save="saveRole" />
+    <RolePermissions v-model="permissionVisible" :role="permissionRole" />
     <RoleDetails
       v-model="detailsVisible"
       :role="detailRole"

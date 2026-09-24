@@ -1,3 +1,12 @@
+import type {
+  CurrentUser,
+  AuthTokens,
+  LoginRequest,
+  RefreshTokenRequest,
+  LogoutRequest,
+  ChangePasswordRequest
+} from '@common-crm/types/api'
+
 /** JWT 用途，防止 access token 与 refresh token 混用。 */
 export type TokenType = 'access' | 'refresh'
 
@@ -18,17 +27,10 @@ export interface AuthenticatedUser {
 }
 
 /** 对外返回的当前用户资料。 */
-export interface AuthUserProfile {
-  userId: string
-  username: string
-  email: string | null
-}
+export type AuthUserProfile = CurrentUser
 
 /** 返回给客户端的 token 对。 */
-export interface AuthTokenData {
-  accessToken: string
-  refreshToken: string
-}
+export type AuthTokenData = AuthTokens
 
 /** 签发 token 所需的用户主体。 */
 export interface TokenSubject {
@@ -43,23 +45,13 @@ export interface IssuedTokenPair extends AuthTokenData {
   expiresAt: Date
 }
 
-export interface LoginCommand {
-  username: string
-  password: string
-}
+export type LoginCommand = LoginRequest
 
-export interface RefreshTokenCommand {
-  refreshToken: string
-}
+export type RefreshTokenCommand = RefreshTokenRequest
 
-export interface LogoutCommand {
-  refreshToken: string
-}
+export type LogoutCommand = LogoutRequest
 
-export interface ChangePasswordCommand {
-  currentPassword: string
-  newPassword: string
-}
+export type ChangePasswordCommand = ChangePasswordRequest
 
 /** 用户仓储返回的认证字段。 */
 export interface UserRecord {

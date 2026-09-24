@@ -29,7 +29,26 @@ export const roleColumns: TableColumn<RoleListItem>[] = [
   { prop: 'updateTime', label: '更新时间', minWidth: 180 }
 ]
 export const roleActions: TableAction<RoleListItem>[] = [
-  { key: 'view', label: '查看详情', icon: 'View' },
-  { key: 'edit', label: '编辑角色', icon: 'Edit' },
-  { key: 'delete', label: '删除角色', icon: 'Delete', type: 'danger' }
+  { key: 'view', label: '查看详情', icon: 'View', permission: 'system:roles:view' },
+  {
+    key: 'edit',
+    label: '编辑角色',
+    icon: 'Edit',
+    permission: 'system:roles:edit',
+    disabled: row => row.isSystem
+  },
+  {
+    key: 'assignPermissions',
+    label: '分配权限',
+    icon: 'Key',
+    permission: 'system:roles:assignPermissions'
+  },
+  {
+    key: 'delete',
+    permission: 'system:roles:delete',
+    label: '删除角色',
+    icon: 'Delete',
+    type: 'danger',
+    disabled: row => row.isSystem
+  }
 ]

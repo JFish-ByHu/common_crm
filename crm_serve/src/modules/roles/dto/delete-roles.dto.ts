@@ -1,3 +1,4 @@
+import type { BatchDeleteRolesRequest } from '@common-crm/types/api'
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -8,7 +9,7 @@ import {
   MaxLength
 } from 'class-validator'
 
-export class DeleteRolesDto {
+export class DeleteRolesDto implements BatchDeleteRolesRequest {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(1000)

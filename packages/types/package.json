@@ -7,7 +7,10 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./micro-app": "./src/micro-app.ts"
+    "./micro-app": "./src/micro-app.ts",
+    "./api": {
+      "types": "./src/api/index.d.ts"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

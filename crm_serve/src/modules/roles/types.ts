@@ -1,10 +1,15 @@
-export const RoleStatus = { DISABLED: 0, ACTIVE: 1 } as const
-export type RoleStatusValue = (typeof RoleStatus)[keyof typeof RoleStatus]
+import type { PageRequest, RoleStatus as SharedRoleStatus } from '@common-crm/types/api'
+
+export const RoleStatus = { DISABLED: 0, ACTIVE: 1 } as const satisfies Record<
+  string,
+  SharedRoleStatus
+>
+export type RoleStatusValue = SharedRoleStatus
 
 export interface RoleSearch {
   keyword?: string
   roleStatus?: RoleStatusValue
-  pagination?: { page: number; pageSize: number }
+  pagination?: PageRequest
 }
 
 export interface CreateRoleInput {

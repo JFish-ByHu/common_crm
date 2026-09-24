@@ -1,7 +1,8 @@
+import type { LoginRequest } from '@common-crm/types/api'
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator'
 
 /** 登录请求参数。 */
-export class LoginDto {
+export class LoginDto implements LoginRequest {
   /** 登录用户名。 */
   @IsString()
   @IsNotEmpty()

@@ -11,6 +11,9 @@ import {
 import { userActions, userColumns, userFilterFields } from './config'
 import { useUserActions, useUserList, useUserPresence, useUserRoles } from './hooks'
 import type { UserListItem } from './types'
+import { authorization } from '../../services'
+
+const can = authorization.hasPermission
 
 const {
   filters,
@@ -84,6 +87,8 @@ const executeUserAction = (key: string, row: UserListItem) => {
       @reset="resetUserFilters"
     />
     <UserToolbar
+      :can-create="can('system:users:create')"
+      :can-delete="can('system:users:batchDelete')"
       :selected-count="selectedUsers.length"
       :disabled="busy"
       @create="openCreateUser"
@@ -95,6 +100,7 @@ const executeUserAction = (key: string, row: UserListItem) => {
       :data="users"
       :columns="userColumns"
       :actions="userActions"
+      :has-permission="can"
       :action-column="{ width: 140, inlineActionCount: 2 }"
       :loading="busy"
       :total="total"
@@ -111,7 +117,7 @@ const executeUserAction = (key: string, row: UserListItem) => {
           :active-value="1"
           :inactive-value="0"
           :before-change="() => changeUserStatus(row)"
-          :disabled="busy"
+          :disabled="busy || !can('system:users:updateAccountStatus')"
           class="user-status-switch"
           :aria-label="`${row.username}的账号状态：${row.accountStatus === 1 ? '正常' : '停用'}`"
         />

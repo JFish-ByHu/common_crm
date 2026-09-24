@@ -1,6 +1,6 @@
-import type { UserAccountStatus } from '../../services'
+import type { UserAccountStatus } from '@common-crm/types/api'
 
-export type { UserAccountStatus, UserListItem, UserOnlineStatus } from '../../services'
+export type { UserAccountStatus, UserListItem, UserOnlineStatus } from '@common-crm/types/api'
 
 export interface UserFilters {
   keyword: string

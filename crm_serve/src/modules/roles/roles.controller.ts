@@ -8,11 +8,15 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards
 } from '@nestjs/common'
 import { AccessTokenGuard } from '../auth'
+import { MenusService } from '../menus'
+import { Result } from '../../common'
 import {
   CreateRoleDto,
+  AssignRolePermissionsDto,
   DeleteRolesDto,
   RoleIdDto,
   RoleQueryDto,
@@ -27,8 +31,30 @@ import { RolesService } from './services'
 export class RolesController {
   constructor(
     private readonly service: RolesService,
-    private readonly presenter: RolesResultPresenter
+    private readonly presenter: RolesResultPresenter,
+    private readonly menus: MenusService
   ) {}
+
+  /** GET /api/roles/permissions：读取角色授权及版本号，系统管理角色为全部权限。 */
+  @Get('permissions')
+  async findPermissions(@Query() query: RoleIdDto) {
+    return Result.success(await this.menus.findRolePermissions(query.roleId))
+  }
+
+  /** GET /api/roles/permissionTree：供角色授权选择目录、页面及按钮。 */
+  @Get('permissionTree')
+  async findPermissionTree() {
+    return Result.success(await this.menus.findTree())
+  }
+
+  /** PATCH /api/roles/updatePermissions：完整替换菜单、按钮授权；空数组清空，自动包含祖先目录。 */
+  @Patch('updatePermissions')
+  async updatePermissions(
+    @Body() input: AssignRolePermissionsDto,
+    @Req() request: { user: { userId: string } }
+  ) {
+    return Result.success(await this.menus.assignPermissions(input, request.user.userId))
+  }
 
   /**
    * GET /api/roles/list：按 ID、名称或编码检索，可按状态过滤，不传分页参数查询全部。

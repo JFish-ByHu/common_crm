@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@common-crm/api": "workspace:*",
+    "@common-crm/components": "workspace:*",
     "@common-crm/customer": "workspace:*",
     "@common-crm/router": "workspace:*",
     "@common-crm/styles": "workspace:*",

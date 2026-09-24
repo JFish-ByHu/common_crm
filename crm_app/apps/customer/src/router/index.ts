@@ -1,35 +1,28 @@
-import { createMicroAppRouter } from '@common-crm/router'
-import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
-import { customerManifest, customerPages, getMicroAppProps } from '../micro-app'
+import { createMicroAppRouter, installPermissionRoutes } from '@common-crm/router'
+import { CrmAccessResult } from '@common-crm/components'
+import { customerManifest, getMicroAppProps } from '../micro-app'
+import { authorization, ensureAuthorization } from '../services'
 
-export function createCustomerRouter() {
+export const createCustomerRouter = () => {
   const result = createMicroAppRouter({
     basePath: customerManifest.basePath,
     navigation: getMicroAppProps().navigation,
     routes: [
       {
-        path: customerPages.list.path,
-        name: 'customer-list',
-        component: () => import('../views/customers/index.vue'),
-        meta: { requiresAuth: true, title: customerPages.list.title }
+        path: '/access-denied',
+        name: 'access-denied',
+        component: CrmAccessResult,
+        props: route => ({ unavailable: route.query.unavailable === '1' })
       },
-      {
-        path: '/:pathMatch(.*)*',
-        redirect: customerPages.list.path
-      }
+      { path: '/:pathMatch(.*)*', component: CrmAccessResult }
     ]
   })
-
-  result.router.beforeEach(to => {
-    if (!qiankunWindow.__POWERED_BY_QIANKUN__) return
-
-    const authState = getMicroAppProps().getAuthState?.()
-    if (!authState?.isAuthenticated && to.meta.requiresAuth !== false) {
-      const redirect = window.location.pathname + window.location.search + window.location.hash
-      window.location.replace('/login?redirect=' + encodeURIComponent(redirect))
-      return false
-    }
+  installPermissionRoutes({
+    router: result.router,
+    basePath: customerManifest.basePath,
+    refresh: ensureAuthorization,
+    pages: () => authorization.pages.value,
+    components: { 'customer-list': () => import('../views/customers/index.vue') }
   })
-
   return result
 }

@@ -40,6 +40,8 @@ modules/auth/
 - 专用技术服务：封装 JWT、文件存储等有明确职责的技术能力。
 - `dto`、`guards`、`decorators`：仅服务当前业务模块时就近放置。
 - `common`：跨业务模块复用的 HTTP 响应等通用代码。
+- `common/pagination`、`common/validation`：共用分页 DTO、默认值与参数转换，业务模块保留自己的错误映射。
+- `@common-crm/types/api`：前后端共用的公开请求/响应类型，DTO 保留运行时校验，模块内部持久化类型仍放在本地。
 - `database`：统一组织 MySQL（`mysql/`，通过 Prisma 访问）与 Redis（`redis/`）基础设施，通过 `index.ts` 导出。
 
 新增业务遵循相同结构，目录按实际职责创建，不预建空目录。
@@ -108,8 +110,15 @@ modules/
 
 `modules/roles/` 负责角色增删改查、启停、成员统计和用户角色关联。
 角色分配接口由 `UsersController` 提供入口，调用 `RolesService`，关联事务集中在角色仓储中。
-本阶段只维护角色资料和关联，菜单/按钮授权留给后续菜单管理实现。
+菜单与按钮授权已接入 `menus/`，统一运行时鉴权位于 `authorization/`。
 数据模型、接口和约束见 [角色管理说明](./roles/README.md)。
+
+## 菜单授权
+
+`menus/` 维护目录、页面、按钮、手工权限标识及真实接口映射，并提供角色授权配置能力。
+`authorization/` 负责全局鉴权、有效权限计算和带数据库版本的 Redis 缓存。
+`RolesModule -> MenusModule -> AuthorizationModule -> AuthModule`，无反向依赖。
+详见 [菜单管理](./menus/README.md) 与 [运行时授权](./authorization/README.md)。
 
 ## 在线状态
 

@@ -1,7 +1,8 @@
+import type { ChangePasswordRequest } from '@common-crm/types/api'
 import { IsByteLength, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator'
 
 /** 修改密码请求参数。 */
-export class ChangePasswordDto {
+export class ChangePasswordDto implements ChangePasswordRequest {
   /** 当前密码。 */
   @IsString()
   @IsNotEmpty()

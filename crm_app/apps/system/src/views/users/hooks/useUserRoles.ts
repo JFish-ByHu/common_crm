@@ -5,9 +5,10 @@ import {
   assignUserRoles,
   isRequestCanceled,
   queryRoleSelectList,
-  queryUserRoles
+  queryUserRoles,
+  refreshAuthorization
 } from '../../../services'
-import type { RoleSelectItem } from '../../../services'
+import type { RoleSelectItem } from '@common-crm/types/api'
 import type { UserListItem } from '../types'
 
 export const useUserRoles = () => {
@@ -89,6 +90,7 @@ export const useUserRoles = () => {
       assignedRoleIds.value = data.roles.map(role => role.roleId)
       selectedRoleIds.value = [...assignedRoleIds.value]
       roleEditorVisible.value = false
+      await refreshAuthorization()
       saved = true
     } catch (error) {
       if (!disposed)

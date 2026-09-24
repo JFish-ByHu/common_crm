@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { compare, hash } from 'bcryptjs'
+import type { HeartbeatResponse } from '@common-crm/types/api'
 import { AuthApplicationError } from '../auth.error'
 import { AuthSessionRepository, AuthUserRepository } from '../repositories'
 import { AuthTokenService } from './auth-token.service'
@@ -104,7 +105,7 @@ export class AuthService {
   }
 
   /** 心跳只更新 Redis，不修改数据库资料时间或延长认证有效期。 */
-  async recordHeartbeat(user: AuthenticatedUser): Promise<{ recorded: boolean }> {
+  async recordHeartbeat(user: AuthenticatedUser): Promise<HeartbeatResponse> {
     return { recorded: await this.presenceService.recordSession(user.sessionId) }
   }
 

@@ -2,7 +2,7 @@ import type { MicroAppProps } from '@common-crm/types'
 import type { RegistrableApp } from 'qiankun'
 import type { Router } from 'vue-router'
 import { createMicroAppNavigation, matchesMicroAppPath } from '@common-crm/router'
-import { useAuthStore, useThemeStore } from '../stores'
+import { useAuthStore, useThemeStore, useAuthorizationStore } from '../stores'
 import { createMicroAppEventBus } from './event-bus'
 import { microAppModules } from './modules'
 
@@ -11,6 +11,16 @@ export function getMicroApps(router: Router): RegistrableApp<MicroAppProps>[] {
   const eventBus = createMicroAppEventBus()
   const sharedProps: MicroAppProps = {
     appName: 'Common CRM',
+    getAuthorization: async (force = false) => {
+      const authorization = useAuthorizationStore()
+      const token = useAuthStore().accessToken
+      if (force) await authorization.refresh()
+      else await authorization.ensure()
+      if (!token || token !== useAuthStore().accessToken || !authorization.state) {
+        throw new Error('登录状态已变化，请重新获取权限')
+      }
+      return authorization.state
+    },
     getAuthState: () => {
       const authStore = useAuthStore()
       return {

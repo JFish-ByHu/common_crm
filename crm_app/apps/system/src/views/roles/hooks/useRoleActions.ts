@@ -7,7 +7,8 @@ import {
   createRole,
   deleteRole,
   updateRole,
-  updateRoleStatus
+  updateRoleStatus,
+  refreshAuthorization
 } from '../../../services'
 import type { RoleFormValues, RoleListItem } from '../types'
 
@@ -50,6 +51,7 @@ export const useRoleActions = (refreshRoleList: () => Promise<boolean>) => {
       else await createRole({ roleCode: values.roleCode.trim(), ...profile })
       if (disposed) return
       editorVisible.value = false
+      await refreshAuthorization()
       refreshed = await refreshRoleList()
     } catch (error) {
       if (!disposed) reportFailure(error)
@@ -81,6 +83,7 @@ export const useRoleActions = (refreshRoleList: () => Promise<boolean>) => {
       confirming.value = false
       mutating.value = true
       await operation()
+      await refreshAuthorization()
       if (!disposed) refreshed = await refreshRoleList()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close' && !disposed) reportFailure(error)

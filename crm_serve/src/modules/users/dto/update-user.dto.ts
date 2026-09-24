@@ -1,3 +1,4 @@
+import type { UpdateUserRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import {
   IsByteLength,
@@ -12,11 +13,12 @@ import {
   ValidateIf
 } from 'class-validator'
 import { AccountStatus, type AccountStatusValue } from '../types'
-import { normalizeEmail, trimString } from './transforms'
+import { trimString } from '../../../common'
+import { normalizeEmail } from './transforms'
 import { UserIdDto } from './user-id.dto'
 
 /** 仅更新传入的字段，资料和账号状态在同一事务中保存。 */
-export class UpdateUserDto extends UserIdDto {
+export class UpdateUserDto extends UserIdDto implements UpdateUserRequest {
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
   @IsString()

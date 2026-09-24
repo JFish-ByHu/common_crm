@@ -1,11 +1,12 @@
-import type { OnlineStatus } from '../presence'
+import type { PageRequest, PageResponse, UserAccountStatus } from '@common-crm/types/api'
+export type { UserListItem } from '@common-crm/types/api'
 
 export const AccountStatus = {
   DISABLED: 0,
   ACTIVE: 1
-} as const
+} as const satisfies Record<string, UserAccountStatus>
 
-export type AccountStatusValue = (typeof AccountStatus)[keyof typeof AccountStatus]
+export type AccountStatusValue = UserAccountStatus
 
 /** 用户仓储使用的公开字段，时间保持数据库毫秒时间戳类型。 */
 export interface StoredUserListItem {
@@ -17,27 +18,11 @@ export interface StoredUserListItem {
   updateTime: bigint
 }
 
-/** 用户管理接口的公开字段，时间由服务端统一格式化。 */
-export interface UserListItem extends Omit<StoredUserListItem, 'createTime' | 'updateTime'> {
-  onlineStatus: OnlineStatus
-  createTime: string
-  updateTime: string
-}
-
 export type UserOption = Pick<StoredUserListItem, 'userId' | 'username' | 'accountStatus'>
 
-export interface UserListResult<T> {
-  list: T[]
-  total: number
-  /** 未启用分页时为 null。 */
-  page: number | null
-  pageSize: number | null
-}
+export type UserListResult<T> = PageResponse<T>
 
-export interface UserPagination {
-  page: number
-  pageSize: number
-}
+export type UserPagination = PageRequest
 
 export interface UserSearch {
   keyword?: string

@@ -1,8 +1,9 @@
+import type { DeleteRoleRequest } from '@common-crm/types/api'
 import { Transform } from 'class-transformer'
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator'
-import { trimString } from './transforms'
+import { trimString } from '../../../common'
 
-export class RoleIdDto {
+export class RoleIdDto implements DeleteRoleRequest {
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()
