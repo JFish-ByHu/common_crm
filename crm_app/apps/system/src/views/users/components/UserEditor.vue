@@ -111,7 +111,7 @@ const clearUserPassword = () => {
           autocomplete="new-password"
         />
       </el-form-item>
-      <el-form-item v-if="!editing" label="账号状态" prop="accountStatus">
+      <el-form-item label="账号状态" prop="accountStatus">
         <el-switch
           v-model="form.accountStatus"
           :active-value="1"
@@ -119,6 +119,12 @@ const clearUserPassword = () => {
           class="user-status-switch"
           :aria-label="`账号状态：${form.accountStatus === 1 ? '正常' : '停用'}`"
         />
+        <p
+          v-if="user?.accountStatus === 1 && form.accountStatus === 0"
+          class="user-status-hint"
+        >
+          保存后将停用账号，并使该用户的登录会话失效。
+        </p>
       </el-form-item>
       <div class="user-editor-actions">
         <el-button :icon="Close" :disabled="busy" @click="closeUserEditor">取消</el-button>
@@ -144,5 +150,13 @@ const clearUserPassword = () => {
 .user-status-switch {
   --el-switch-on-color: var(--crm-color-primary);
   --el-switch-off-color: var(--crm-color-danger);
+}
+
+.user-status-hint {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>

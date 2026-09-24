@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 import { hash } from 'bcryptjs'
-import { formatApiDateTime } from '../../common'
+import { createUserId, formatApiDateTime } from '../../common'
 import type {
   CreateUserDto,
   UpdateUserDto,
@@ -64,7 +63,7 @@ export class UsersService {
 
   async create(command: CreateUserDto) {
     const user = await this.usersRepository.create({
-      userId: randomUUID(),
+      userId: createUserId(),
       username: command.username,
       email: command.email ?? null,
       passwordHash: await hash(command.password, 12),
@@ -77,17 +76,19 @@ export class UsersService {
     if (
       command.username === undefined &&
       command.email === undefined &&
-      command.password === undefined
+      command.password === undefined &&
+      command.accountStatus === undefined
     ) {
       throw new UsersError('INVALID_INPUT')
     }
     const sessionIds =
-      command.password === undefined
-        ? []
-        : await this.authSessionRepository.findSessionIdsByUsers([userId])
+      command.password !== undefined || command.accountStatus === AccountStatus.DISABLED
+        ? await this.authSessionRepository.findSessionIdsByUsers([userId])
+        : []
     const user = await this.usersRepository.update(userId, {
       username: command.username,
       email: command.email,
+      accountStatus: command.accountStatus,
       passwordHash: command.password === undefined ? undefined : await hash(command.password, 12)
     })
     await this.presenceService.removeSessions(sessionIds)

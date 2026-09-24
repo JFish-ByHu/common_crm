@@ -70,7 +70,7 @@ export class UsersRepository {
     })
   }
 
-  /** 重设密码和撤销会话使用同一事务，防止部分更新。 */
+  /** 资料、账号状态与会话撤销使用同一事务，防止部分更新。 */
   update(userId: string, input: UpdateUserInput): Promise<StoredUserListItem> {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
@@ -81,11 +81,12 @@ export class UsersRepository {
             username: input.username,
             email: input.email,
             password: input.passwordHash,
+            accountStatus: input.accountStatus,
             updateTime: now
           },
           select: userSelect
         })
-        if (input.passwordHash !== undefined) {
+        if (input.passwordHash !== undefined || input.accountStatus === AccountStatus.DISABLED) {
           await transaction.crmAuthSession.updateMany({
             where: { userId, revokedAt: null },
             data: { revokedAt: now, updateTime: now }

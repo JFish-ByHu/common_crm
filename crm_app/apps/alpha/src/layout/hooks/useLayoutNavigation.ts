@@ -1,14 +1,12 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { DataAnalysis, Odometer, TrendCharts } from '@element-plus/icons-vue'
+import { Odometer } from '@element-plus/icons-vue'
 import { matchesMicroAppPath } from '@common-crm/router'
 import { microAppModules } from '../../micro-apps'
 import type { BreadcrumbItem, LayoutMenuItem } from '../components'
 
 const menuItems: LayoutMenuItem[] = [
   { path: '/dashboard', title: '控制台', icon: Odometer, menuOrder: 10 },
-  { path: '/sales', title: '销售管理', icon: TrendCharts, disabled: true, menuOrder: 30 },
-  { path: '/reports', title: '数据报表', icon: DataAnalysis, disabled: true, menuOrder: 40 },
   ...microAppModules.map(({ manifest, icon, menuOrder }) => ({
     path: manifest.basePath,
     title: manifest.title,

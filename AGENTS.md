@@ -12,6 +12,8 @@
 - 入口文件负责路由、状态和数据流编排；可复用或职责单一的视图区域拆为组件，通过 props/emits 传递数据和事件。
 - 同一作用类型下的多个模块（例如 stores、services、hooks、utils）必须提供目录级统一入口 `index.ts`；业务代码优先从统一入口导入，避免散落引用具体实现文件。
 - 优先使用 Element Plus 组件，只有被两个或以上页面或应用复用时才提升到 `packages`。
+- 详情展示默认优先使用 Element Plus 抽屉组件 `el-drawer`；只有用户明确要求时才使用弹窗或其他展示方式。
+- 详情字段优先使用无边框的 `el-descriptions` / `el-descriptions-item` 基础样式，不使用带网格边框的表格样式，除非用户明确要求。
 
 ## 函数与方法命名
 
@@ -27,6 +29,13 @@
 - 统一使用 `list` 查询列表、`selectList` 查询下拉选项、`create` 创建、`update` 编辑、`delete` 单删、`batchDelete` 批删；创建统一使用 `create`，不混用 `add`。
 - 其他动作使用语义明确的小驼峰名称，例如 `updateAccountStatus`。查询使用 GET 和 query 参数，创建使用 POST，编辑使用 PATCH，删除使用 DELETE；写操作所需的 ID 与其他参数一并放入 JSON 请求体。
 - 接口调整时同步 Controller 注释、DTO、调用方和接口文档；已有接口未在本次修改范围内时不批量改名。
+
+## 用户 ID 规则
+
+- 新增普通用户的 `userId` 必须为 `crm_user_<UUID>`，管理员账号必须为 `crm_admin_<UUID>`，保留 UUID 中的连字符。
+- 用户 ID 由服务端生成，通过 `crm_serve/src/common` 统一导出的 `createUserId()`、`createAdminUserId()` 复用，禁止直接用裸 UUID 创建用户或由前端指定 ID。
+- 管理员账号的创建或初始化流程应显式选择管理员 ID 生成方法；禁止根据可编辑的用户名或 ID 前缀授予权限。
+- 用户 ID 创建后保持稳定，编辑资料不重新生成 ID；历史 ID 格式调整必须通过显式迁移处理，并同步关联记录及登录会话。
 
 ## 修改与验证
 

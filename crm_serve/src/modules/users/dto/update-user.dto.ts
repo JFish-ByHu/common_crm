@@ -2,6 +2,8 @@ import { Transform } from 'class-transformer'
 import {
   IsByteLength,
   IsEmail,
+  IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -9,10 +11,11 @@ import {
   MinLength,
   ValidateIf
 } from 'class-validator'
+import { AccountStatus, type AccountStatusValue } from '../types'
 import { normalizeEmail, trimString } from './transforms'
 import { UserIdDto } from './user-id.dto'
 
-/** 仅更新传入的字段；账号状态通过独立接口修改。 */
+/** 仅更新传入的字段，资料和账号状态在同一事务中保存。 */
 export class UpdateUserDto extends UserIdDto {
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
@@ -34,4 +37,10 @@ export class UpdateUserDto extends UserIdDto {
   @IsEmail()
   @MaxLength(255)
   email?: string | null
+
+  /** 省略不修改；0 停用、1 正常，停用时撤销全部登录会话。 */
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsInt()
+  @IsIn(Object.values(AccountStatus))
+  accountStatus?: AccountStatusValue
 }

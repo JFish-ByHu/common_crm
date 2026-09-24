@@ -49,6 +49,16 @@ modules/
 │   ├── presence/
 │   ├── iam.module.ts
 │   └── index.ts
+├── roles/
+│   ├── dto/
+│   ├── roles.controller.ts
+│   ├── roles.service.ts
+│   ├── roles.repository.ts
+│   ├── roles-result.presenter.ts
+│   ├── roles.error.ts
+│   ├── roles.module.ts
+│   ├── types.ts
+│   └── index.ts
 └── users/
     ├── dto/
     ├── users.controller.ts
@@ -61,13 +71,21 @@ modules/
     └── index.ts
 ```
 
-`AppModule` 通过 `modules/index.ts` 引入两个业务模块。`UsersModule` 导入 `IamModule`
-复用鉴权守卫、认证服务、会话仓储与在线状态模块，依赖方向为 `UsersModule -> IamModule`。
-`IamModule` 不导入用户管理模块，也不重复注册其 Controller 和 Service。
+`AppModule` 通过 `modules/index.ts` 引入 IAM、用户管理和角色管理三个业务模块。
+`UsersModule` 导入 `IamModule` 复用鉴权守卫、认证服务、会话仓储与在线状态模块，
+同时导入 `RolesModule` 复用用户角色分配服务。`RolesModule` 仅依赖 `IamModule` 的鉴权能力。
+`IamModule` 不反向导入用户或角色管理模块，也不重复注册其 Controller 和 Service。
 `iam/auth/user.repository.ts` 保留认证专用的账号读取与密码修改，
 `users/users.repository.ts` 处理管理端公开字段和管理事务。
 
 接口路径保持 `/api/users/*`，参数、响应与删除语义见 [用户管理接口说明](./users/README.md)。
+
+## 角色管理
+
+`modules/roles/` 负责角色增删改查、启停、成员统计和用户角色关联。
+角色分配接口由 `UsersController` 提供入口，调用 `RolesService`，关联事务集中在角色仓储中。
+本阶段只维护角色资料和关联，菜单/按钮授权留给后续菜单管理实现。
+数据模型、接口和约束见 [角色管理说明](./roles/README.md)。
 
 ## 在线状态
 

@@ -58,4 +58,5 @@ export interface UpdateUserInput {
   username?: string
   email?: string | null
   passwordHash?: string
+  accountStatus?: AccountStatusValue
 }

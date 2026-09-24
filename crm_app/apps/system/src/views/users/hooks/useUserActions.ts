@@ -50,6 +50,9 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
         await updateUser({
           ...profile,
           userId: user.userId,
+          ...(values.accountStatus !== user.accountStatus
+            ? { accountStatus: values.accountStatus }
+            : {}),
           ...(values.password ? { password: values.password } : {})
         })
       } else {

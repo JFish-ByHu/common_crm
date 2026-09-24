@@ -2,7 +2,7 @@ import { createMicroAppRouter } from '@common-crm/router'
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
 import { getMicroAppProps, systemManifest, systemPages } from '../micro-app'
 
-export function createSystemRouter() {
+export const createSystemRouter = () => {
   const result = createMicroAppRouter({
     basePath: systemManifest.basePath,
     navigation: getMicroAppProps().navigation,
@@ -16,6 +16,12 @@ export function createSystemRouter() {
         name: 'system-users',
         component: () => import('../views/users/index.vue'),
         meta: { requiresAuth: true, title: systemPages.users.title }
+      },
+      {
+        path: systemPages.roles.path,
+        name: 'system-roles',
+        component: () => import('../views/roles/index.vue'),
+        meta: { requiresAuth: true, title: systemPages.roles.title }
       },
       {
         path: '/:pathMatch(.*)*',

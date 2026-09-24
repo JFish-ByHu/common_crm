@@ -16,6 +16,7 @@ model CrmUser {
   updateTime    BigInt           @db.UnsignedBigInt
   accountStatus Int              @default(1) @db.UnsignedTinyInt
   authSessions  CrmAuthSession[]
+  roles         CrmUserRole[]
 
   @@map("crm_users")
 }
@@ -33,4 +34,30 @@ model CrmAuthSession {
   @@index([userId], map: "idx_crm_auth_sessions_user_id")
   @@index([expiresAt], map: "idx_crm_auth_sessions_expires_at")
   @@map("crm_auth_sessions")
+}
+
+model CrmRole {
+  roleId     String        @id @db.VarChar(64)
+  roleName   String        @db.VarChar(64)
+  roleCode   String        @unique(map: "uk_crm_roles_code") @db.VarChar(64)
+  roleStatus Int           @default(1) @db.UnsignedTinyInt
+  remark     String?       @db.VarChar(255)
+  createTime BigInt        @db.UnsignedBigInt
+  updateTime BigInt        @db.UnsignedBigInt
+  users      CrmUserRole[]
+
+  @@index([roleStatus, createTime], map: "idx_crm_roles_status_created")
+  @@map("crm_roles")
+}
+
+model CrmUserRole {
+  userId     String  @db.VarChar(64)
+  roleId     String  @db.VarChar(64)
+  createTime BigInt  @db.UnsignedBigInt
+  user       CrmUser @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade, map: "fk_crm_user_roles_user")
+  role       CrmRole @relation(fields: [roleId], references: [roleId], onDelete: Restrict, onUpdate: Cascade, map: "fk_crm_user_roles_role")
+
+  @@id([userId, roleId])
+  @@index([roleId], map: "idx_crm_user_roles_role")
+  @@map("crm_user_roles")
 }

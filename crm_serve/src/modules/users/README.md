@@ -1,7 +1,7 @@
 # 用户管理接口
 
 所有接口均要求 `Authorization: Bearer <accessToken>`，响应沿用 `{ code, data, msg }`。
-当前项目只有登录鉴权，没有角色或权限模型，因此有效登录用户均可调用这些接口。
+当前只执行登录鉴权；角色资料和用户角色关联已实现，菜单/按钮权限尚未接入，因此有效登录用户均可调用这些接口。
 
 ## 接口列表
 
@@ -15,6 +15,9 @@
 | PATCH  | `/api/users/updateAccountStatus` | 修改账号状态 |
 | DELETE | `/api/users/delete`              | 单个删除     |
 | DELETE | `/api/users/batchDelete`         | 批量删除     |
+| POST   | `/api/users/logout`              | 强制登出     |
+| GET    | `/api/users/roles`               | 已分配角色   |
+| PATCH  | `/api/users/assignRoles`         | 分配角色     |
 
 `accountStatus` 为数字：`1` 正常，`0` 停用。
 
@@ -114,14 +117,30 @@ Content-Type: application/json
 }
 ```
 
-服务端自动生成 UUID 格式的 `userId`，客户端不能指定 ID 或时间字段。
+服务端通过 `common` 统一导出的 `createUserId()` 生成 `crm_user_<UUID>` 格式的 `userId`，
+例如 `crm_user_c181b50a-6b54-4553-af06-3ec271241520`。客户端不能指定 ID 或时间字段。
 响应 `data` 为新用户的公开资料，字段与用户列表一致。
+
+管理员账号的 ID 使用 `crm_admin_<UUID>`，由 `createAdminUserId()` 生成。
+当前新增接口创建普通用户，项目暂未提供管理员初始化入口。角色分配不会更改用户 ID 或自动授予管理权限。
+后续管理员初始化入口应显式调用管理员 ID 生成方法，不根据 `username` 推断身份。
+前缀只用于标识格式，不能代替权限校验；修改用户名不会改变已有 ID。
+历史 ID 继续兼容查询与鉴权，需要统一历史格式时通过显式数据迁移处理。
+
+迁移 `20260922000000_normalize_user_id_prefixes` 为历史裸 UUID 补齐 `crm_user_` 前缀，
+并将已确认的初始管理员 `crm_user_01a05a9f-6991-72cd-ad6d-47ec8f9686f6`
+调整为 `crm_admin_01a05a9f-6991-72cd-ad6d-47ec8f9686f6`，保留原 UUID 后缀。
+迁移在事务内撤销受影响的登录会话并更新用户 ID，关联会话通过外键 `ON UPDATE CASCADE` 同步。
+执行后受影响账号需要重新登录；旧 Redis 会话 Key 应按受影响的 sessionId 清理，TTL 为清理失败的兜底。
 
 ## 编辑用户
 
-请求体必传 `userId`，可更新 `username`、`email`、`password`，至少传入一项，校验规则与创建相同。
+请求体必传 `userId`，可更新 `username`、`email`、`password`、`accountStatus`，至少传入一项，校验规则与创建相同。
 字段省略表示不修改；`email` 传空字符串或 `null` 表示清空邮箱。
-传入 `password` 表示管理端重设密码，更新密码与撤销该用户全部登录会话在同一事务中完成。
+`accountStatus` 只接受数字 `0` 或 `1`，可与用户资料一起保存。
+传入 `password` 表示管理端重设密码；重设密码或停用账号时，资料、账号状态的更新与
+撤销该用户全部登录会话在同一事务中完成。事务成功后清理相关 Redis 在线记录。
+重新启用账号不会恢复之前撤销的会话。
 
 ```http
 PATCH /api/users/update
@@ -130,11 +149,13 @@ Content-Type: application/json
 {
   "userId": "目标用户ID",
   "username": "updated-user",
-  "email": null
+  "email": null,
+  "accountStatus": 0
 }
 ```
 
-响应 `data` 为编辑后的公开资料。账号状态通过下面的独立接口修改。
+响应 `data` 为编辑后的公开资料。编辑弹窗使用此接口一次保存资料和状态；
+列表中的状态开关继续使用下面的独立接口。
 
 ## 修改账号状态
 
@@ -150,7 +171,7 @@ Content-Type: application/json
 
 ## 单个与批量删除
 
-采用物理删除，数据库外键会级联清理关联登录会话，当前不提供软删除和恢复接口。
+采用物理删除，数据库外键会级联清理关联登录会话及用户角色关联，当前不提供软删除和恢复接口。
 
 ```http
 DELETE /api/users/delete
@@ -169,6 +190,18 @@ Content-Type: application/json
 批量删除接收 1 至 1000 个不重复的用户 ID。任一 ID 不存在时整批回滚；
 不会静默跳过不存在的用户，也不会按部分 ID 删除。
 删除成功的 `data` 为 `{ "deletedCount": 1 }` 或实际批量删除数量。
+
+## 用户角色分配
+
+`GET /api/users/roles?userId=目标用户ID` 返回 `{ userId, roles }`，包含该用户已分配的停用角色。
+
+`PATCH /api/users/assignRoles` 接收 JSON `{ "userId": "目标用户ID", "roleIds": ["角色ID"] }`，
+事务内完整替换该用户的角色集合。数组最多 1000 项且不可重复；空数组解除全部角色。
+停用角色不能新增分配，已有停用角色可保留或移除。用户或角色不存在时整组操作失败。
+查询和保存响应中的 `roles` 每项为 `roleId`、`roleName`、`roleCode`、`roleStatus`。
+
+角色关联由 `RolesService` 统一维护；`UsersModule` 导入 `RolesModule` 复用该服务。
+完整接口及后续菜单权限扩展见 [角色管理说明](../roles/README.md)。
 
 ## 错误约定
 

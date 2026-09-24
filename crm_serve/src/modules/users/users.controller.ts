@@ -11,8 +11,10 @@ import {
   UseGuards
 } from '@nestjs/common'
 import { AccessTokenGuard } from '../iam'
+import { RolesResultPresenter, RolesService } from '../roles'
 import {
   CreateUserDto,
+  AssignUserRolesDto,
   DeleteUsersDto,
   UpdateUserDto,
   UpdateUserStatusDto,
@@ -30,7 +32,9 @@ import { UsersService } from './users.service'
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly presenter: UsersResultPresenter
+    private readonly presenter: UsersResultPresenter,
+    private readonly rolesService: RolesService,
+    private readonly rolesPresenter: RolesResultPresenter
   ) {}
 
   /**
@@ -64,7 +68,7 @@ export class UsersController {
   }
 
   /**
-   * POST /api/users/create：生成用户 ID，并使用 bcrypt 摘要保存密码。
+   * POST /api/users/create：生成 crm_user_ 前缀的用户 ID，并使用 bcrypt 摘要保存密码。
    * @param command 用户名、初始密码及可选邮箱、账号状态
    * @returns 新用户的公开资料
    */
@@ -75,8 +79,8 @@ export class UsersController {
   }
 
   /**
-   * PATCH /api/users/update：仅编辑传入的资料，重设密码时撤销全部会话。
-   * @param command userId 必传；用户名、邮箱或新密码至少传入一项
+   * PATCH /api/users/update：原子更新资料和账号状态，重设密码或停用时撤销全部会话。
+   * @param command userId 必传；用户名、邮箱、新密码或 accountStatus 至少传入一项
    * @returns 编辑后的公开资料
    */
   @Patch('update')
@@ -125,5 +129,27 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   logout(@Body() command: UserIdDto) {
     return this.presenter.present(() => this.usersService.logout(command.userId))
+  }
+
+  /**
+   * GET /api/users/roles：获取已分配角色，包含停用角色。
+   * @param query 待查询用户的 userId
+   * @returns userId 和精简角色列表 roles
+   */
+  @Get('roles')
+  findRoles(@Query() query: UserIdDto) {
+    return this.rolesPresenter.present(() => this.rolesService.findUserRoles(query.userId))
+  }
+
+  /**
+   * PATCH /api/users/assignRoles：事务内完整替换角色，不能新增分配停用角色。
+   * @param command userId 和 roleIds；空数组解除全部分配
+   * @returns userId 和保存后的精简角色列表 roles
+   */
+  @Patch('assignRoles')
+  assignRoles(@Body() command: AssignUserRolesDto) {
+    return this.rolesPresenter.present(() =>
+      this.rolesService.assignUserRoles(command.userId, command.roleIds)
+    )
   }
 }

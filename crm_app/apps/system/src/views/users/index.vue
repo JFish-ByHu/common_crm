@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
-import { UserDetails, UserEditor, UserOnlineStatus, UserToolbar } from './components'
+import {
+  UserDetails,
+  UserEditor,
+  UserOnlineStatus,
+  UserRoleEditor,
+  UserToolbar
+} from './components'
 import { userActions, userColumns, userFilterFields } from './config'
-import { useUserActions, useUserList, useUserPresence } from './hooks'
+import { useUserActions, useUserList, useUserPresence, useUserRoles } from './hooks'
 import type { UserListItem } from './types'
 
 const {
@@ -37,6 +43,19 @@ const busy = computed(() => loading.value || saving.value || mutating.value)
 useUserPresence(users, busy, currentPage, pageSize)
 const detailsVisible = ref(false)
 const selectedUser = ref<UserListItem | null>(null)
+const {
+  roleEditorVisible,
+  roleUser,
+  roleOptions,
+  assignedRoleIds,
+  selectedRoleIds,
+  rolesLoading,
+  rolesSaving,
+  rolesLoaded,
+  openUserRoles,
+  loadUserRoles,
+  saveUserRoles
+} = useUserRoles()
 
 const executeUserAction = (key: string, row: UserListItem) => {
   if (busy.value) return
@@ -45,6 +64,8 @@ const executeUserAction = (key: string, row: UserListItem) => {
     detailsVisible.value = true
   } else if (key === 'edit') {
     openEditUser(row)
+  } else if (key === 'assignRoles') {
+    openUserRoles(row)
   } else if (key === 'logout') {
     void logoutUser(row)
   } else if (key === 'delete') {
@@ -100,6 +121,18 @@ const executeUserAction = (key: string, row: UserListItem) => {
       </template>
     </CrmTable>
     <UserDetails v-model="detailsVisible" :user="selectedUser" />
+    <UserRoleEditor
+      v-model="roleEditorVisible"
+      v-model:role-ids="selectedRoleIds"
+      :user="roleUser"
+      :options="roleOptions"
+      :assigned-role-ids="assignedRoleIds"
+      :loading="rolesLoading"
+      :saving="rolesSaving"
+      :loaded="rolesLoaded"
+      @save="saveUserRoles"
+      @retry="loadUserRoles"
+    />
     <UserEditor
       v-model="editorVisible"
       :user="editingUser"

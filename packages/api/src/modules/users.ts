@@ -56,6 +56,7 @@ export interface UpdateUserRequest {
   username?: string
   email?: string | null
   password?: string
+  accountStatus?: UserAccountStatus
 }
 
 export interface UpdateUserAccountStatusRequest {
@@ -118,7 +119,7 @@ export const queryUserSelectList = (
 export const createUser = (data: CreateUserRequest): Promise<ApiResponse<UserListItem>> =>
   request<UserListItem, CreateUserRequest>({ url: '/users/create', method: 'post', data })
 
-/** 编辑用户资料；传入新密码会撤销该用户的登录会话。 */
+/** 编辑用户资料和账号状态；重设密码或停用账号会撤销该用户的登录会话。 */
 export const updateUser = (data: UpdateUserRequest): Promise<ApiResponse<UserListItem>> =>
   request<UserListItem, UpdateUserRequest>({ url: '/users/update', method: 'patch', data })
 
