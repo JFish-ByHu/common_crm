@@ -4,7 +4,7 @@ import { APP_FILTER } from '@nestjs/core'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { PrismaModule } from './database'
-import { IamModule, RolesModule, UsersModule } from './modules'
+import { AuthModule, RolesModule, UsersModule } from './modules'
 import { HttpExceptionFilter } from './common'
 
 @Module({
@@ -14,7 +14,7 @@ import { HttpExceptionFilter } from './common'
       envFilePath: ['.env.development', '.env']
     }),
     PrismaModule,
-    IamModule,
+    AuthModule,
     RolesModule,
     UsersModule
   ],

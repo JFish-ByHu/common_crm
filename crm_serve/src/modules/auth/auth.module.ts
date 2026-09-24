@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
-import { AuthController } from './auth/auth.controller'
-import { AuthResultPresenter } from './auth/auth-result.presenter'
-import { AuthService } from './auth/auth.service'
-import { AuthSessionRepository } from './auth/auth-session.repository'
-import { AuthTokenService } from './auth/auth-token.service'
-import { AccessTokenGuard } from './auth/guards/access-token.guard'
-import { UserRepository } from './auth/user.repository'
-import { PresenceModule } from './presence'
+import { AuthController } from './auth.controller'
+import { AuthResultPresenter } from './auth-result.presenter'
+import { AuthService, AuthTokenService } from './services'
+import { AuthSessionRepository, AuthUserRepository } from './repositories'
+import { AccessTokenGuard } from './guards'
+import { PresenceModule } from '../presence'
 
-/** IAM 模块，负责认证、鉴权、登录会话和在线状态。 */
+/** 认证模块，负责登录、鉴权和登录会话，并调用在线状态模块。 */
 @Module({
   imports: [
     PresenceModule,
@@ -27,13 +25,13 @@ import { PresenceModule } from './presence'
   ],
   controllers: [AuthController],
   providers: [
-    UserRepository,
+    AuthUserRepository,
     AuthSessionRepository,
     AuthTokenService,
     AuthService,
     AuthResultPresenter,
     AccessTokenGuard
   ],
-  exports: [AccessTokenGuard, AuthService, AuthSessionRepository, PresenceModule]
+  exports: [AccessTokenGuard, AuthService, AuthSessionRepository]
 })
-export class IamModule {}
+export class AuthModule {}

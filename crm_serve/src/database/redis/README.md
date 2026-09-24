@@ -13,4 +13,4 @@
 示例配置见后端根目录的 `.env.example`。
 
 本目录只提供 Redis 连接与故障降级。会话在线状态的 Key、TTL、查询和清理规则
-由 [用户在线状态模块](../../modules/iam/presence/README.md) 管理。
+由 [用户在线状态模块](../../modules/presence/README.md) 管理。

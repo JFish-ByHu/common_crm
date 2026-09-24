@@ -1,7 +1,9 @@
 # 角色管理
 
 本阶段实现角色增删改查、启停和用户角色分配，一个用户可关联多个角色。
-模块位于 `src/modules/roles/`，与 `users/`、`iam/` 同级，按 Controller → Service → Repository 组织。
+模块位于 `src/modules/roles/`，与 `users/`、`auth/`、`presence/` 同级，按 Controller → Service → Repository 组织。
+`roles.module.ts`、`roles.controller.ts` 和 `roles-result.presenter.ts` 保留在根目录，
+具体业务实现位于 `services/`、`repositories/`；请求校验放在 `dto/`，实现目录均提供统一入口。
 
 所有接口要求有效的 `Authorization: Bearer <accessToken>`，响应为 `{ code, data, msg }`。
 当前仅校验登录会话，尚未根据角色限制接口访问；角色名称、编码和用户 ID 前缀均不授予管理权限。

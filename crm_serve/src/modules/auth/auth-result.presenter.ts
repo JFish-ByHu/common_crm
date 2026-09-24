@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Result, StatusCode, type StatusDefinition } from '../../../common/http'
+import { Result, StatusCode, type StatusDefinition } from '../../common'
 import { AuthApplicationError, type AuthApplicationErrorCode } from './auth.error'
 
 /** 将认证业务结果转换为统一 HTTP 响应。 */

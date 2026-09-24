@@ -96,7 +96,7 @@ GET /api/users/onlineStatus?userIds=用户ID1,用户ID2
 ```
 
 不存在的用户不返回。该接口用于静默更新当前页，不替代用户列表的资料查询。
-更多生命周期和配置说明见 [用户在线状态](../iam/presence/README.md)。
+更多生命周期和配置说明见 [用户在线状态](../presence/README.md)。
 
 ## 创建用户
 
@@ -218,12 +218,12 @@ DTO 校验失败返回 HTTP 422 和业务码 422；未登录、会话失效或�
 
 ## 实现位置
 
-本模块位于 `src/modules/users/`，与 `iam/` 同级，由 `UsersModule` 独立装配。
-`UsersModule` 导入 `IamModule` 复用鉴权、认证会话和在线状态能力；IAM 不反向依赖用户管理模块。
+本模块位于 `src/modules/users/`，与 `auth/`、`presence/`、`roles/` 同级，由 `UsersModule` 独立装配。
+`UsersModule` 导入 `AuthModule` 复用鉴权和认证会话，导入 `PresenceModule` 获取在线状态；两者均不反向依赖用户管理模块。
 
-`users.controller.ts` 声明路由与接口注释，`dto/` 校验入参，`users.service.ts`
-处理分页默认值、密码摘要和用户 ID 生成，`users.repository.ts` 封装查询、写入和事务。
-`users-result.presenter.ts` 负责统一成功与业务错误响应。
+`users.controller.ts` 声明路由与接口注释，`dto/` 校验入参，`services/users.service.ts`
+处理分页默认值、密码摘要和用户 ID 生成，`repositories/users.repository.ts` 封装查询、写入和事务。
+根目录的 `users-result.presenter.ts` 负责统一成功与业务错误响应，测试按需放在 `tests/`。
 
 数据库中的用户及认证会话时间统一使用 `BIGINT UNSIGNED` 保存 13 位 Unix 毫秒时间戳。
 `prisma/migrations/20260920000000_use_epoch_millisecond_timestamps` 负责将已有

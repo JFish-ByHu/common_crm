@@ -2,6 +2,8 @@
 
 在线状态表示用户存在近期发送心跳的有效登录会话，不表示正在操作鼠标或键盘。
 数据只保存在 Redis；不新增用户表字段、在线状态表或 Prisma migration。
+模块装配入口为 `presence.module.ts`，在线记录逻辑位于根目录的 `presence.service.ts`，
+现有测试位于 `tests/presence.service.spec.ts`。当前没有独立 Controller、DTO 或仓储，不创建对应空目录。
 
 ## 判定与存储
 
@@ -45,19 +47,19 @@ Redis 暂时不可用时 `recorded=false`，认证失效仍返回 401，不因�
 
 后端沿用 `.env.development` / `.env` 的加载方式，示例见 `crm_serve/.env.example`。
 
-| 配置 | 说明 |
-| --- | --- |
-| `REDIS_HOST` / `REDIS_PORT` | 默认 `127.0.0.1:6379` |
-| `REDIS_USERNAME` / `REDIS_PASSWORD` | 可选 ACL 用户名和密码 |
-| `REDIS_DB` | 默认 `0` |
-| `REDIS_TLS` | 使用 host/port 配置时可设为 `true` |
-| `REDIS_URL` | 可选，优先于上面的连接参数；支持 `rediss://` |
-| `REDIS_KEY_PREFIX` | 默认 `crm:<NODE_ENV>`，未设置环境时为 `crm:development` |
+| 配置                                | 说明                                                    |
+| ----------------------------------- | ------------------------------------------------------- |
+| `REDIS_HOST` / `REDIS_PORT`         | 默认 `127.0.0.1:6379`                                   |
+| `REDIS_USERNAME` / `REDIS_PASSWORD` | 可选 ACL 用户名和密码                                   |
+| `REDIS_DB`                          | 默认 `0`                                                |
+| `REDIS_TLS`                         | 使用 host/port 配置时可设为 `true`                      |
+| `REDIS_URL`                         | 可选，优先于上面的连接参数；支持 `rediss://`            |
+| `REDIS_KEY_PREFIX`                  | 默认 `crm:<NODE_ENV>`，未设置环境时为 `crm:development` |
 
 不同环境应使用不同前缀，同一环境的后端实例使用相同前缀及 Redis 数据库。
 连接和单次操作最多等待 1500ms，未连接时立即降级；禁用离线命令排队及断线命令重放。
 连接失败自动退避重连，不阻止后端启动或登录等核心操作；日志不会输出连接字符串或凭据。
 
 `src/database/redis/` 只封装连接、超时和故障降级；本模块维护在线 Key 与 TTL；
-`iam/auth/` 负责心跳身份校验和登录生命周期；同级业务模块 `modules/users/` 汇总有效会话并提供公开在线状态。
+`modules/auth/` 负责心跳身份校验和登录生命周期；同级业务模块 `modules/users/` 汇总有效会话并提供公开在线状态。
 部署本功能只需安装依赖并由维护者重启后端，不执行 Prisma 迁移或手动清库。

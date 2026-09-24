@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 import type { Request } from 'express'
-import { Result, StatusCode } from '../../../../common/http'
-import { AuthService } from '../auth.service'
+import { Result, StatusCode } from '../../../common'
+import { AuthService } from '../services'
 import type { AuthenticatedUser } from '../types'
 
 type AuthenticatedRequest = Request & { user?: AuthenticatedUser }

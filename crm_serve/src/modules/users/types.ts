@@ -1,4 +1,4 @@
-import type { OnlineStatus } from '../iam'
+import type { OnlineStatus } from '../presence'
 
 export const AccountStatus = {
   DISABLED: 0,

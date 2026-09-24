@@ -1,28 +1,24 @@
 import { Injectable } from '@nestjs/common'
 import { hash } from 'bcryptjs'
-import { createUserId, formatApiDateTime } from '../../common'
+import { createUserId, formatApiDateTime } from '../../../common'
 import type {
   CreateUserDto,
   UpdateUserDto,
   UserListQueryDto,
   UserOptionsQueryDto,
   UserPaginationDto
-} from './dto'
+} from '../dto'
 import {
   AccountStatus,
   type AccountStatusValue,
   type StoredUserListItem,
   type UserListItem,
   type UserPagination
-} from './types'
-import { UsersError } from './users.error'
-import { UsersRepository } from './users.repository'
-import {
-  AuthSessionRepository,
-  PresenceService,
-  type OnlineStatus,
-  type UserOnlineStatus
-} from '../iam'
+} from '../types'
+import { UsersError } from '../users.error'
+import { UsersRepository } from '../repositories'
+import { AuthSessionRepository } from '../../auth'
+import { PresenceService, type OnlineStatus, type UserOnlineStatus } from '../../presence'
 
 @Injectable()
 export class UsersService {

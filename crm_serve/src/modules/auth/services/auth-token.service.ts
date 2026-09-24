@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
-import type { AuthTokenPayload, IssuedTokenPair, TokenSubject, TokenType } from './types'
+import type { AuthTokenPayload, IssuedTokenPair, TokenSubject, TokenType } from '../types'
 
 /** JWT 签发、校验和 refresh token 摘要服务。 */
 @Injectable()

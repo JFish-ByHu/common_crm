@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp } from '../../common'
-import { PrismaService } from '../../database'
-import { RolesError } from './roles.error'
-import { RoleStatus, type CreateRoleInput, type RoleSearch, type UpdateRoleInput } from './types'
+import { currentTimestamp } from '../../../common'
+import { PrismaService } from '../../../database'
+import { RolesError } from '../roles.error'
+import { RoleStatus, type CreateRoleInput, type RoleSearch, type UpdateRoleInput } from '../types'
 
 const roleSelect = {
   roleId: true,

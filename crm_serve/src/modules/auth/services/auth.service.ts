@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { compare, hash } from 'bcryptjs'
-import { AuthApplicationError } from './auth.error'
-import { AuthSessionRepository } from './auth-session.repository'
+import { AuthApplicationError } from '../auth.error'
+import { AuthSessionRepository, AuthUserRepository } from '../repositories'
 import { AuthTokenService } from './auth-token.service'
 import type {
   AuthenticatedUser,
@@ -12,15 +12,14 @@ import type {
   LogoutCommand,
   RefreshTokenCommand,
   UserRecord
-} from './types'
-import { UserRepository } from './user.repository'
-import { PresenceService } from '../presence'
+} from '../types'
+import { PresenceService } from '../../presence'
 
 /** 认证业务服务，负责登录、会话轮换、鉴权和密码修改。 */
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: AuthUserRepository,
     private readonly authSessionRepository: AuthSessionRepository,
     private readonly authTokenService: AuthTokenService,
     private readonly presenceService: PresenceService

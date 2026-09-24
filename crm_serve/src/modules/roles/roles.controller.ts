@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common'
-import { AccessTokenGuard } from '../iam'
+import { AccessTokenGuard } from '../auth'
 import {
   CreateRoleDto,
   DeleteRolesDto,
@@ -20,7 +20,7 @@ import {
   UpdateRoleStatusDto
 } from './dto'
 import { RolesResultPresenter } from './roles-result.presenter'
-import { RolesService } from './roles.service'
+import { RolesService } from './services'
 
 @Controller('roles')
 @UseGuards(AccessTokenGuard)

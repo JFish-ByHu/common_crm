@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { currentTimestamp, dateToTimestamp, timestampToDate } from '../../../common'
 import { PrismaService } from '../../../database'
-import type { AuthSessionRecord, RotateAuthSessionInput } from './types'
+import type { AuthSessionRecord, RotateAuthSessionInput } from '../types'
 
 /** 登录会话的 Prisma 数据访问。 */
 @Injectable()

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { RedisModule } from '../../../database'
+import { RedisModule } from '../../database'
 import { PresenceService } from './presence.service'
 
 @Module({

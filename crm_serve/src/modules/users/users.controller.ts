@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common'
-import { AccessTokenGuard } from '../iam'
+import { AccessTokenGuard } from '../auth'
 import { RolesResultPresenter, RolesService } from '../roles'
 import {
   CreateUserDto,
@@ -24,7 +24,7 @@ import {
   UserOnlineStatusQueryDto
 } from './dto'
 import { UsersResultPresenter } from './users-result.presenter'
-import { UsersService } from './users.service'
+import { UsersService } from './services'
 
 /** 平台用户管理 HTTP 接口，统一要求有效的 access token。 */
 @Controller('users')

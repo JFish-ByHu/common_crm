@@ -1,4 +1,3 @@
-export * from './roles.module'
-export * from './roles.service'
-export * from './roles-result.presenter'
-export * from './types'
+export { RolesModule } from './roles.module'
+export { RolesService } from './services'
+export { RolesResultPresenter } from './roles-result.presenter'

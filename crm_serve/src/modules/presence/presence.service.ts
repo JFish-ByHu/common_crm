@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { RedisService } from '../../../database'
+import { RedisService } from '../../database'
 import type { OnlineStatus } from './types'
 
 const SESSION_TTL_SECONDS = 180
 const BATCH_SIZE = 100
 
-/** 只维护短期在线记录；会话是否有效仍由 IAM 数据库查询决定。 */
+/** 只维护短期在线记录；会话是否有效仍由认证模块的数据库查询决定。 */
 @Injectable()
 export class PresenceService {
   constructor(private readonly redis: RedisService) {}

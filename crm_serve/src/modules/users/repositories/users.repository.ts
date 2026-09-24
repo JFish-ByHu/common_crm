@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp } from '../../common'
-import { PrismaService } from '../../database'
-import { UsersError } from './users.error'
+import { currentTimestamp } from '../../../common'
+import { PrismaService } from '../../../database'
+import { UsersError } from '../users.error'
 import {
   AccountStatus,
   type AccountStatusValue,
@@ -12,7 +12,7 @@ import {
   type UserListResult,
   type UserOption,
   type UserSearch
-} from './types'
+} from '../types'
 
 const userSelect = {
   userId: true,

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import { createRoleId, formatApiDateTime } from '../../common'
-import type { CreateRoleDto, RoleQueryDto, UpdateRoleDto } from './dto'
-import { RolesError } from './roles.error'
-import { RolesRepository } from './roles.repository'
-import { RoleStatus, type RoleStatusValue, type RoleSearch } from './types'
+import { createRoleId, formatApiDateTime } from '../../../common'
+import type { CreateRoleDto, RoleQueryDto, UpdateRoleDto } from '../dto'
+import { RolesError } from '../roles.error'
+import { RolesRepository } from '../repositories'
+import { RoleStatus, type RoleStatusValue, type RoleSearch } from '../types'
 
 type StoredRole = Awaited<ReturnType<RolesRepository['findDetail']>>
 const presentRole = ({ _count, ...role }: StoredRole) => ({

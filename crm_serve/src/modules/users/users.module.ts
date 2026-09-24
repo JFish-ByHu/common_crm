@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common'
-import { IamModule } from '../iam'
+import { AuthModule } from '../auth'
+import { PresenceModule } from '../presence'
 import { RolesModule } from '../roles'
 import { UsersController } from './users.controller'
 import { UsersResultPresenter } from './users-result.presenter'
-import { UsersRepository } from './users.repository'
-import { UsersService } from './users.service'
+import { UsersRepository } from './repositories'
+import { UsersService } from './services'
 
-/** 平台用户管理，复用 IAM 的鉴权、会话与在线状态能力。 */
+/** 平台用户管理，复用认证模块的鉴权、会话以及在线状态模块的能力。 */
 @Module({
-  imports: [IamModule, RolesModule],
+  imports: [AuthModule, PresenceModule, RolesModule],
   controllers: [UsersController],
   providers: [UsersRepository, UsersService, UsersResultPresenter],
   exports: [UsersService]

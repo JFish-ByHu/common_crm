@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { dateToTimestamp } from '../../../common'
 import { PrismaService } from '../../../database'
-import type { UserRecord } from './types'
+import type { UserRecord } from '../types'
 
 /** 用户账号的 Prisma 数据访问。 */
 @Injectable()
-export class UserRepository {
+export class AuthUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   /**
