@@ -10,6 +10,7 @@ import type {
   DeleteUsersResponse,
   LogoutUserResponse,
   UserListResponse,
+  UserPermissionsResponse,
   UserSelectItem
 } from '@common-crm/types/api'
 import type { CreateUserDto, UpdateUserDto, UserListQueryDto, UserOptionsQueryDto } from '../dto'
@@ -22,6 +23,7 @@ import {
 import { UsersError } from '../users.error'
 import { UsersRepository } from '../repositories'
 import { AuthSessionRepository } from '../../auth'
+import { AuthorizationService } from '../../authorization'
 import { PresenceService, type UserOnlineStatus, type UserPresenceItem } from '../../presence'
 
 @Injectable()
@@ -29,7 +31,8 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly authSessionRepository: AuthSessionRepository,
-    private readonly presenceService: PresenceService
+    private readonly presenceService: PresenceService,
+    private readonly authorizationService: AuthorizationService
   ) {}
 
   async findList(query: UserListQueryDto): Promise<UserListResponse> {
@@ -43,6 +46,13 @@ export class UsersService {
       ...result,
       list: result.list.map(user => toUserListItem(user, statuses.get(user.userId) ?? null))
     }
+  }
+
+  /** 查询用户的有效菜单、按钮权限及其角色来源。 */
+  async findPermissions(userId: string): Promise<UserPermissionsResponse> {
+    const permissions = await this.authorizationService.findUserPermissionDetails(userId)
+    if (!permissions) throw new UsersError('USER_NOT_FOUND')
+    return permissions
   }
 
   async queryOnlineStatus(userIds: string[]): Promise<UserPresenceItem[]> {
@@ -168,6 +178,10 @@ const toUserListItem = (
   onlineStatus: UserOnlineStatus
 ): UserListItem => ({
   ...user,
+  roles: user.roles.map(({ role }) => ({
+    ...role,
+    roleStatus: parseBinaryStatus(role.roleStatus)
+  })),
   accountStatus: parseBinaryStatus(user.accountStatus),
   onlineStatus,
   createTime: formatApiDateTime(user.createTime),

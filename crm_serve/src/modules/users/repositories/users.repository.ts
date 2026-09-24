@@ -20,7 +20,15 @@ const userSelect = {
   email: true,
   accountStatus: true,
   createTime: true,
-  updateTime: true
+  updateTime: true,
+  roles: {
+    select: {
+      role: {
+        select: { roleId: true, roleName: true, roleCode: true, roleStatus: true, isSystem: true }
+      }
+    },
+    orderBy: [{ role: { isSystem: 'desc' } }, { role: { roleName: 'asc' } }, { roleId: 'asc' }]
+  }
 } satisfies Prisma.CrmUserSelect
 
 const optionSelect = {

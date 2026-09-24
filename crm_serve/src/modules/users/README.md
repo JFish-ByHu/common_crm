@@ -18,6 +18,7 @@
 | DELETE | `/api/users/batchDelete`         | 批量删除     |
 | POST   | `/api/users/logout`              | 强制登出     |
 | GET    | `/api/users/roles`               | 已分配角色   |
+| GET    | `/api/users/permissions`         | 有效权限与来源 |
 | PATCH  | `/api/users/assignRoles`         | 分配角色     |
 
 `accountStatus` 为数字：`1` 正常，`0` 停用。
@@ -39,7 +40,9 @@
 用户列表额外支持 `keyword` 和 `accountStatus`。`keyword` 去除首尾空格后，对
 `userId`、`username`、`email` 按 OR 模糊查询；`accountStatus` 与关键字条件按 AND
 组合。空关键字不添加检索条件。返回字段为 `userId`、`username`、`email`、
-`accountStatus`、`onlineStatus`、`createTime`、`updateTime`，不会查询或返回密码。
+`accountStatus`、`onlineStatus`、`createTime`、`updateTime`、`roles`，不会查询或返回密码。
+`roles` 包含已分配角色的 `roleId`、`roleName`、`roleCode`、`roleStatus`、`isSystem`，包含停用角色。
+角色通过关联查询随列表一起返回，前端不逐行请求角色接口。
 
 ```http
 GET /api/users/list
@@ -72,6 +75,16 @@ GET /api/users/selectList?username=admin&page=1&pageSize=20
   "msg": "SUCCESS"
 }
 ```
+
+## 查看用户权限
+
+`GET /api/users/permissions?userId=用户ID` 返回 `UserPermissionsResponse`：用户基本信息、权限版本、管理员标志、已分配角色及有效菜单/按钮树。
+查询实时读取数据库同一快照，与实际鉴权共用授权计算逻辑；每个菜单和按钮的 `sourceRoles` 标明授权来源。
+多个启用角色的权限取并集；停用角色、停用菜单及其后代、停用按钮均不计入。仅隐藏导航不撤销访问。
+账号停用时有效菜单为空，保留角色信息帮助排查。管理员标记“全部权限（含后续新增权限）”，菜单树展示当前启用配置。
+用户不存在时返回用户模块统一的 404 业务错误。接口不写死权限标识，沿用数据库接口映射和全局守卫。
+数据迁移 `20260924020000_add_user_permission_view` 添加“查看权限”按钮及接口绑定，默认不向普通角色追加授权；可在角色管理中分配。
+前端通过 `system:users:viewPermissions` 控制“查看权限”操作，详情默认使用只读抽屉，不修改角色或授权。
 
 ## 在线状态
 

@@ -6,10 +6,18 @@ import {
   UserEditor,
   UserOnlineStatus,
   UserRoleEditor,
+  UserRoleTags,
+  UserPermissions,
   UserToolbar
 } from './components'
 import { userActions, userColumns, userFilterFields } from './config'
-import { useUserActions, useUserList, useUserPresence, useUserRoles } from './hooks'
+import {
+  useUserActions,
+  useUserList,
+  useUserPresence,
+  useUserRoles,
+  useUserPermissions
+} from './hooks'
 import type { UserListItem } from './types'
 import { authorization } from '../../services'
 
@@ -58,7 +66,18 @@ const {
   openUserRoles,
   loadUserRoles,
   saveUserRoles
-} = useUserRoles()
+} = useUserRoles((userId, roles) => {
+  const user = users.value.find(item => item.userId === userId)
+  if (user) user.roles = roles
+})
+const {
+  permissionsVisible,
+  permissionUser,
+  permissions,
+  permissionsLoading,
+  openUserPermissions,
+  loadUserPermissions
+} = useUserPermissions()
 
 const executeUserAction = (key: string, row: UserListItem) => {
   if (busy.value) return
@@ -69,6 +88,8 @@ const executeUserAction = (key: string, row: UserListItem) => {
     openEditUser(row)
   } else if (key === 'assignRoles') {
     openUserRoles(row)
+  } else if (key === 'viewPermissions') {
+    openUserPermissions(row)
   } else if (key === 'logout') {
     void logoutUser(row)
   } else if (key === 'delete') {
@@ -122,11 +143,21 @@ const executeUserAction = (key: string, row: UserListItem) => {
           :aria-label="`${row.username}的账号状态：${row.accountStatus === 1 ? '正常' : '停用'}`"
         />
       </template>
+      <template #roles="{ row }">
+        <UserRoleTags :roles="row.roles" />
+      </template>
       <template #onlineStatus="{ row }">
         <UserOnlineStatus :status="row.onlineStatus" />
       </template>
     </CrmTable>
     <UserDetails v-model="detailsVisible" :user="selectedUser" />
+    <UserPermissions
+      v-model="permissionsVisible"
+      :user="permissionUser"
+      :permissions="permissions"
+      :loading="permissionsLoading"
+      @refresh="loadUserPermissions"
+    />
     <UserRoleEditor
       v-model="roleEditorVisible"
       v-model:role-ids="selectedRoleIds"

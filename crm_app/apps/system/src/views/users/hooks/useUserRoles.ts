@@ -11,7 +11,7 @@ import {
 import type { RoleSelectItem } from '@common-crm/types/api'
 import type { UserListItem } from '../types'
 
-export const useUserRoles = () => {
+export const useUserRoles = (onRolesSaved: (userId: string, roles: RoleSelectItem[]) => void) => {
   const roleEditorVisible = ref(false)
   const roleUser = ref<UserListItem | null>(null)
   const roleOptions = ref<RoleSelectItem[]>([])
@@ -87,6 +87,7 @@ export const useUserRoles = () => {
       })
       if (disposed) return
       if (!data) throw new Error('分配角色响应为空')
+      onRolesSaved(data.userId, data.roles)
       assignedRoleIds.value = data.roles.map(role => role.roleId)
       selectedRoleIds.value = [...assignedRoleIds.value]
       roleEditorVisible.value = false

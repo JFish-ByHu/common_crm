@@ -145,6 +145,16 @@ export class UsersController {
   }
 
   /**
+   * GET /api/users/permissions：实时查询指定用户的有效权限及角色来源。
+   * @param query 待查询用户的 userId
+   * @returns 已分配角色和有效菜单/按钮树；停用账号无有效菜单，管理员标记全部权限
+   */
+  @Get('permissions')
+  findPermissions(@Query() query: UserIdDto) {
+    return this.presenter.present(() => this.usersService.findPermissions(query.userId))
+  }
+
+  /**
    * PATCH /api/users/assignRoles：事务内完整替换角色，不能新增分配停用角色。
    * @param command userId 和 roleIds；空数组解除全部分配
    * @returns userId 和保存后的精简角色列表 roles

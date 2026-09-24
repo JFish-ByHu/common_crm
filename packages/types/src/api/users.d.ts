@@ -1,4 +1,6 @@
 import type { OptionalPageRequest, PageResponse, DeleteCountResponse } from './common.js'
+import type { RoleSelectItem } from './roles.js'
+import type { MenuType } from './menus.js'
 
 export type UserAccountStatus = 0 | 1
 
@@ -17,6 +19,8 @@ export interface UserSelectItem {
 }
 
 export interface UserListItem extends UserSelectItem {
+  /** 已分配角色，包含停用角色。 */
+  roles: RoleSelectItem[]
   email: string | null
   onlineStatus: UserOnlineStatus
   /** 中国标准时间，格式为 yyyy-MM-dd HH:mm:ss。 */
@@ -69,4 +73,31 @@ export type DeleteUsersResponse = DeleteCountResponse
 
 export interface LogoutUserResponse {
   revokedCount: number
+}
+
+export interface UserPermissionAction {
+  actionId: string
+  name: string
+  permissionCode: string
+  sourceRoles: RoleSelectItem[]
+}
+
+export interface UserPermissionMenu {
+  menuId: string
+  menuType: MenuType
+  name: string
+  permissionCode: string
+  routePath: string | null
+  visible: boolean
+  sourceRoles: RoleSelectItem[]
+  actions: UserPermissionAction[]
+  children: UserPermissionMenu[]
+}
+
+/** 查询时实时计算；停用账号的有效菜单为空，已分配角色仍保留展示。 */
+export interface UserPermissionsResponse extends UserSelectItem {
+  revision: string
+  isSuperAdmin: boolean
+  roles: RoleSelectItem[]
+  menus: UserPermissionMenu[]
 }

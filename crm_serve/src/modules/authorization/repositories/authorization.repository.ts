@@ -51,17 +51,23 @@ export class AuthorizationRepository {
     return this.prisma.readWithRetry(() =>
       this.prisma.$transaction(
         async tx => {
-          const [roles, menus] = await Promise.all([
+          const [roles, menus, user, state] = await Promise.all([
             tx.crmRole.findMany({
-              where: { roleStatus: 1, users: { some: { userId } } },
-              include: { menus: true, actions: true }
+              where: { users: { some: { userId } } },
+              include: { menus: true, actions: true },
+              orderBy: [{ isSystem: 'desc' }, { roleName: 'asc' }, { roleId: 'asc' }]
             }),
             tx.crmMenu.findMany({
               include: { actions: { include: { rules: true }, orderBy: { sortOrder: 'asc' } } },
               orderBy: [{ sortOrder: 'asc' }, { menuId: 'asc' }]
-            })
+            }),
+            tx.crmUser.findUnique({
+              where: { userId },
+              select: { userId: true, username: true, accountStatus: true }
+            }),
+            tx.crmAuthorizationState.findUniqueOrThrow({ where: { id: 1 } })
           ])
-          return { roles, menus }
+          return { roles, menus, user, revision: state.revision.toString() }
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
       )

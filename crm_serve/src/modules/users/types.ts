@@ -1,4 +1,9 @@
-import type { PageRequest, PageResponse, UserAccountStatus } from '@common-crm/types/api'
+import type {
+  PageRequest,
+  PageResponse,
+  UserAccountStatus,
+  RoleSelectItem
+} from '@common-crm/types/api'
 export type { UserListItem } from '@common-crm/types/api'
 
 export const AccountStatus = {
@@ -10,6 +15,7 @@ export type AccountStatusValue = UserAccountStatus
 
 /** 用户仓储使用的公开字段，时间保持数据库毫秒时间戳类型。 */
 export interface StoredUserListItem {
+  roles: { role: Omit<RoleSelectItem, 'roleStatus'> & { roleStatus: number } }[]
   userId: string
   username: string
   email: string | null

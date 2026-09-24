@@ -23,6 +23,7 @@ export const userFilterFields: FilterField<UserFilters>[] = [
 export const userColumns: TableColumn<UserListItem>[] = [
   { prop: 'userId', label: '用户ID', minWidth: 220 },
   { prop: 'username', label: '用户名', minWidth: 180 },
+  { prop: 'roles', label: '所属角色', minWidth: 240, slot: 'roles', showOverflowTooltip: false },
   { prop: 'email', label: '邮箱', minWidth: 240, formatter: row => row.email || '-' },
   { prop: 'accountStatus', label: '账号状态', width: 110, slot: 'status' },
   { prop: 'onlineStatus', label: '在线状态', width: 110, slot: 'onlineStatus' },
@@ -41,6 +42,12 @@ export const userColumns: TableColumn<UserListItem>[] = [
 export const userActions: TableAction<UserListItem>[] = [
   { key: 'view', label: '查看详情', icon: 'View', permission: 'system:users:view' },
   { key: 'edit', label: '编辑用户', icon: 'Edit', permission: 'system:users:edit' },
+  {
+    key: 'viewPermissions',
+    label: '查看权限',
+    icon: 'Key',
+    permission: 'system:users:viewPermissions'
+  },
   { key: 'assignRoles', label: '分配角色', icon: 'User', permission: 'system:users:assignRoles' },
   {
     key: 'logout',

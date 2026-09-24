@@ -5,6 +5,7 @@ import type {
   UserPresenceItem,
   UserSelectItem,
   UserListItem,
+  UserPermissionsResponse,
   QueryUserListRequest,
   QueryUserSelectListRequest,
   UserListResponse,
@@ -22,6 +23,7 @@ export type {
   UserPresenceItem,
   UserSelectItem,
   UserListItem,
+  UserPermissionsResponse,
   QueryUserListRequest,
   QueryUserSelectListRequest,
   UserListResponse,
@@ -35,6 +37,15 @@ export type {
 } from '@common-crm/types/api'
 
 type UserQueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
+
+/** 按需查询指定用户的有效菜单、按钮权限及角色来源。 */
+export const queryUserPermissions = (userId: string, config: UserQueryConfig = {}) =>
+  request<UserPermissionsResponse>({
+    ...config,
+    url: '/users/permissions',
+    method: 'get',
+    params: { userId }
+  })
 
 /** 查询最多 100 个用户的在线状态；不存在的用户不返回。 */
 export const queryUsersOnlineStatus = (
