@@ -63,6 +63,17 @@ export class MenusRepository {
       menuId,
       async tx => {
         const menus = await tx.crmMenu.findMany()
+        const routeShape = (path: string) => path.replace(/:[a-zA-Z][a-zA-Z0-9_]*/g, ':param')
+        if (
+          input.routePath &&
+          menus.some(
+            menu =>
+              menu.menuId !== menuId &&
+              menu.routePath &&
+              routeShape(menu.routePath) === routeShape(input.routePath!)
+          )
+        )
+          rejectPermissionInput('路由路径与已有页面冲突，参数改名不能区分两个路由', 409)
         const previous = menus.find(item => item.menuId === menuId)
         const protectedIds = new Set<string>()
         let protectedNode = menus.find(item => item.componentKey === 'system-menus')
@@ -75,9 +86,9 @@ export class MenusRepository {
           rejectPermissionInput('菜单管理及其上级目录必须保持启用和显示')
         if (
           previous?.componentKey === 'system-menus' &&
-          (input.componentKey !== 'system-menus' || input.menuType !== 'PAGE')
+          (input.componentKey !== 'system-menus' || input.menuType !== 'PAGE' || !input.routePath)
         )
-          rejectPermissionInput('菜单管理入口不能更换组件或类型')
+          rejectPermissionInput('菜单管理入口不能更换组件或类型，也不能清空路由路径')
         if (!creating && !previous) rejectPermissionInput('菜单不存在', 404)
         if (
           previous &&

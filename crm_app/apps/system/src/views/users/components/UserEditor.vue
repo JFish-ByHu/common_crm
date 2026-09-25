@@ -4,7 +4,7 @@ import { Check, Close } from '@element-plus/icons-vue'
 import type { FormInstance, FormItemRule, FormRules } from 'element-plus'
 import type { UserFormValues, UserListItem } from '../types'
 
-const props = defineProps<{ user: UserListItem | null; saving: boolean; error: string }>()
+const props = defineProps<{ user: UserListItem | null; saving: boolean }>()
 const visible = defineModel<boolean>({ default: false })
 const emit = defineEmits<{ save: [values: UserFormValues] }>()
 const formRef = ref<FormInstance>()
@@ -77,14 +77,6 @@ const clearUserPassword = () => {
     destroy-on-close
     @closed="clearUserPassword"
   >
-    <el-alert
-      v-if="error"
-      :title="error"
-      type="error"
-      :closable="false"
-      show-icon
-      class="save-error"
-    />
     <el-form
       ref="formRef"
       :model="form"
@@ -137,10 +129,6 @@ const clearUserPassword = () => {
 </template>
 
 <style scoped>
-.save-error {
-  margin-bottom: 20px;
-}
-
 .user-editor-actions {
   display: flex;
   justify-content: flex-end;

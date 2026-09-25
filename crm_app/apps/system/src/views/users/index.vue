@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ key: 'system-users', title: '用户管理', defaultPath: '/system/users' })
+
 import { computed, ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
 import {
@@ -41,7 +43,6 @@ const {
   editingUser,
   saving,
   mutating,
-  saveError,
   openCreateUser,
   openEditUser,
   saveUser,
@@ -174,7 +175,6 @@ const executeUserAction = (key: string, row: UserListItem) => {
       v-model="editorVisible"
       :user="editingUser"
       :saving="saving"
-      :error="saveError"
       @save="saveUser"
     />
   </section>

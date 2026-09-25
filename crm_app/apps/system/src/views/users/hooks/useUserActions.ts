@@ -8,7 +8,7 @@ import {
   updateUser,
   updateUserAccountStatus
 } from '../../../services'
-import { Message } from '@common-crm/utils'
+import { Message, Notification } from '@common-crm/utils'
 import type { UserFormValues, UserListItem } from '../types'
 import { getUserErrorMessage } from '../utils'
 
@@ -18,7 +18,6 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
   const saving = ref(false)
   const confirming = ref(false)
   const mutating = ref(false)
-  const saveError = ref('')
   let disposed = false
 
   onBeforeUnmount(() => {
@@ -27,20 +26,17 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
 
   const openCreateUser = () => {
     editingUser.value = null
-    saveError.value = ''
     editorVisible.value = true
   }
 
   const openEditUser = (user: UserListItem) => {
     editingUser.value = user
-    saveError.value = ''
     editorVisible.value = true
   }
 
   const saveUser = async (values: UserFormValues) => {
     if (saving.value || confirming.value || mutating.value || disposed) return
     saving.value = true
-    saveError.value = ''
     const user = editingUser.value
     let refreshed = false
 
@@ -66,7 +62,12 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
       editorVisible.value = false
       refreshed = await refreshUserList()
     } catch (error) {
-      if (!disposed) saveError.value = getUserErrorMessage(error, '保存用户失败，请稍后重试')
+      if (!disposed) {
+        Notification.error({
+          title: '保存失败',
+          message: getUserErrorMessage(error, '保存用户失败，请稍后重试')
+        })
+      }
     } finally {
       saving.value = false
     }
@@ -99,7 +100,10 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
       refreshed = await refreshUserList()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close' && !disposed) {
-        Message.error(getUserErrorMessage(error, '操作失败，请稍后重试'))
+        Notification.error({
+          title: '操作失败',
+          message: getUserErrorMessage(error, '操作失败，请稍后重试')
+        })
       }
       return false
     } finally {
@@ -164,7 +168,6 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
     editingUser,
     saving,
     mutating,
-    saveError,
     openCreateUser,
     openEditUser,
     saveUser,

@@ -1,5 +1,6 @@
 import { createMicroAppRouter, installPermissionRoutes } from '@common-crm/router'
 import { CrmAccessResult } from '@common-crm/components'
+import { pageComponents } from 'virtual:crm-pages/components'
 import { getMicroAppProps, systemManifest } from '../micro-app'
 import { authorization, ensureAuthorization } from '../services'
 
@@ -22,11 +23,8 @@ export const createSystemRouter = () => {
     basePath: systemManifest.basePath,
     refresh: ensureAuthorization,
     pages: () => authorization.pages.value,
-    components: {
-      'system-users': () => import('../views/users/index.vue'),
-      'system-roles': () => import('../views/roles/index.vue'),
-      'system-menus': () => import('../views/menus/index.vue')
-    }
+    components: pageComponents,
+    missingComponent: CrmAccessResult
   })
   return result
 }

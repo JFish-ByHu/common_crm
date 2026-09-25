@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ key: 'customer-list', title: '客户管理', defaultPath: '/customer' })
+
 import { ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
 import { CustomerDetails } from './components'

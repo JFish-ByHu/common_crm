@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ key: 'system-roles', title: '角色管理', defaultPath: '/system/roles' })
+
 import { computed, ref } from 'vue'
 import { CrmFilterBar, CrmTable } from '@common-crm/components'
 import { RoleDetails, RoleEditor, RoleToolbar, RolePermissions } from './components'

@@ -1,10 +1,12 @@
 import type { RouteComponent, Router } from 'vue-router'
 import type { AuthorizedMenu } from '@common-crm/types/api'
+import { isPageRoutePath } from './page-path'
 
 interface PermissionRouteOptions {
   router: Router
   basePath: string
   components: Record<string, RouteComponent | (() => Promise<unknown>)>
+  missingComponent: RouteComponent
   refresh: () => Promise<void>
   pages: () => AuthorizedMenu[]
 }
@@ -24,6 +26,7 @@ export const installPermissionRoutes = ({
   router,
   basePath,
   components,
+  missingComponent,
   refresh,
   pages
 }: PermissionRouteOptions) => {
@@ -45,8 +48,8 @@ export const installPermissionRoutes = ({
     const available = pages().filter(
       page =>
         page.componentKey &&
-        components[page.componentKey] &&
         page.routePath &&
+        isPageRoutePath(page.routePath) &&
         (page.routePath === basePath || page.routePath.startsWith(basePath + '/'))
     )
     const ids = new Set(available.map(page => page.menuId))
@@ -63,18 +66,25 @@ export const installPermissionRoutes = ({
       const remove = router.addRoute({
         path: page.routePath!.slice(basePath.length) || '/',
         name: `authorized-${page.menuId}`,
-        component: components[page.componentKey!] as RouteComponent,
+        component: (components[page.componentKey!] ?? missingComponent) as RouteComponent,
+        props: components[page.componentKey!] ? false : { missingComponent: true },
+        strict: true,
+        sensitive: true,
         meta: { title: page.name, requiresAuth: true }
       })
       installed.set(page.menuId, { signature, remove })
     }
-    const page = available.find(item => (item.routePath!.slice(basePath.length) || '/') === to.path)
-    if (page) {
-      if (to.name !== `authorized-${page.menuId}`) return { path: to.fullPath, replace: true }
+    const resolved = router.resolve(to.fullPath)
+    if (available.some(page => resolved.name === `authorized-${page.menuId}`)) {
+      if (
+        to.name !== resolved.name ||
+        to.matched.some((record, index) => record !== resolved.matched[index])
+      )
+        return { path: to.fullPath, replace: true }
       return
     }
-    if (to.path === '/' && available[0])
-      return available[0].routePath!.slice(basePath.length) || '/'
+    const firstPage = available.find(page => page.visible && !page.routePath!.includes(':'))
+    if (to.path === '/' && firstPage) return firstPage.routePath!.slice(basePath.length) || '/'
     return { name: 'access-denied', query: { redirect: to.fullPath } }
   })
 }

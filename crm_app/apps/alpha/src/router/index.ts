@@ -82,7 +82,12 @@ router.beforeEach(async to => {
   if (to.path === '/dashboard') return
   if (authorization.canVisit(to.path)) return
   const firstPage = flattenAuthorizedMenus(authorization.state?.menus ?? []).find(
-    menu => menu.menuType === 'PAGE' && menu.routePath?.startsWith(to.path + '/')
+    menu =>
+      menu.menuType === 'PAGE' &&
+      menu.componentKey &&
+      menu.visible &&
+      !menu.routePath?.includes(':') &&
+      menu.routePath?.startsWith(to.path + '/')
   )
   if (firstPage && microAppModules.some(({ manifest }) => manifest.basePath === to.path))
     return firstPage.routePath!

@@ -18,6 +18,7 @@ import type {
   ApiPermissionRule,
   MenuActionInput,
   MenuActionItem,
+  MenuFilters,
   MenuInput,
   MenuItem
 } from '../types'
@@ -25,6 +26,22 @@ import { batchDeleteMenus } from '../../../services'
 
 export const useMenus = () => {
   const menus = ref<MenuItem[]>([])
+  const filters = ref<MenuFilters>({ keyword: '' })
+  const appliedKeyword = ref('')
+  const filteredMenus = computed(() => {
+    const text = appliedKeyword.value.trim().toLowerCase()
+    const filterMenus = (nodes: MenuItem[]): MenuItem[] =>
+      nodes.flatMap(menu => {
+        if (
+          !text ||
+          `${menu.name} ${menu.permissionCode} ${menu.routePath ?? ''}`.toLowerCase().includes(text)
+        )
+          return [menu]
+        const children = filterMenus(menu.children)
+        return children.length ? [{ ...menu, children }] : []
+      })
+    return filterMenus(menus.value)
+  })
   const selectedMenus = ref<MenuItem[]>([])
   const endpoints = ref<ApiPermissionRule[]>([])
   const loading = ref(false)
@@ -75,6 +92,16 @@ export const useMenus = () => {
     editingMenu.value = menu
     parentId.value = menu?.parentId ?? parent
     editorVisible.value = true
+  }
+  const searchMenus = () => {
+    if (loading.value || saving.value) return
+    appliedKeyword.value = filters.value.keyword
+    return refreshMenus()
+  }
+  const resetMenuFilters = () => {
+    if (loading.value || saving.value) return
+    filters.value = { keyword: '' }
+    return searchMenus()
   }
   const openActions = (menu: MenuItem) => {
     actionMenuId.value = menu.menuId
@@ -161,6 +188,10 @@ export const useMenus = () => {
   })
   return {
     menus,
+    filters,
+    filteredMenus,
+    searchMenus,
+    resetMenuFilters,
     selectedMenus,
     removeSelectedMenus,
     endpoints,

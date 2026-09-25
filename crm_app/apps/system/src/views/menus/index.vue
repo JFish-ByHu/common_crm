@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Delete, Edit, Key, Plus, Refresh } from '@element-plus/icons-vue'
-import { ActionEditor, MenuActions, MenuEditor } from './components'
+definePage({ key: 'system-menus', title: '菜单管理', defaultPath: '/system/menus' })
+
+import { computed } from 'vue'
+import { Delete, Edit, Key, Plus } from '@element-plus/icons-vue'
+import { CrmFilterBar } from '@common-crm/components'
+import { ActionEditor, MenuActions, MenuEditor, MenuToolbar } from './components'
+import { menuFilterFields } from './config'
 import { useMenus } from './hooks'
 import type { MenuItem } from './types'
 
 const {
   menus,
+  filters,
+  filteredMenus,
+  searchMenus,
+  resetMenuFilters,
   selectedMenus,
   removeSelectedMenus,
   endpoints,
@@ -20,7 +28,6 @@ const {
   actionEditorVisible,
   editingAction,
   can,
-  refreshMenus,
   openMenu,
   openActions,
   openAction,
@@ -32,54 +39,26 @@ const {
 const selectMenus = (rows: MenuItem[]) => {
   selectedMenus.value = rows
 }
-const keyword = ref('')
-const filteredMenus = computed(() => {
-  const text = keyword.value.trim().toLowerCase()
-  const filter = (nodes: MenuItem[]): MenuItem[] =>
-    nodes.flatMap(menu => {
-      if (
-        !text ||
-        `${menu.name} ${menu.permissionCode} ${menu.routePath ?? ''}`.toLowerCase().includes(text)
-      )
-        return [menu]
-      const children = filter(menu.children)
-      return children.length ? [{ ...menu, children }] : []
-    })
-  return filter(menus.value)
-})
+const busy = computed(() => loading.value || saving.value)
 </script>
 
 <template>
   <section class="menu-management" aria-label="菜单管理">
-    <div class="menu-toolbar">
-      <el-input
-        v-model="keyword"
-        clearable
-        placeholder="菜单名称、权限标识或路由"
-        aria-label="检索菜单"
-        class="menu-search"
-      />
-      <el-button
-        v-if="can('system:menus:create')"
-        type="primary"
-        :icon="Plus"
-        :disabled="saving"
-        @click="openMenu()"
-        >新增菜单</el-button
-      >
-      <el-button
-        v-if="can('system:menus:batchDelete')"
-        type="danger"
-        plain
-        :icon="Delete"
-        :disabled="saving || !selectedMenus.length"
-        @click="removeSelectedMenus"
-        >批量删除</el-button
-      >
-      <el-tooltip content="刷新"
-        ><el-button :icon="Refresh" :loading="loading" aria-label="刷新菜单" @click="refreshMenus"
-      /></el-tooltip>
-    </div>
+    <CrmFilterBar
+      v-model="filters"
+      :fields="menuFilterFields"
+      :loading="busy"
+      @search="searchMenus"
+      @reset="resetMenuFilters"
+    />
+    <MenuToolbar
+      :can-create="can('system:menus:create')"
+      :can-delete="can('system:menus:batchDelete')"
+      :selected-count="selectedMenus.length"
+      :disabled="busy"
+      @create="openMenu()"
+      @delete-selected="removeSelectedMenus"
+    />
     <el-table
       v-loading="loading || saving"
       class="menu-table"
@@ -195,23 +174,8 @@ const filteredMenus = computed(() => {
   min-height: calc(100vh - 64px);
   background: var(--crm-color-surface);
 }
-.menu-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  padding-top: 16px;
-  margin-bottom: 16px;
-}
 .menu-table {
   box-shadow: var(--el-box-shadow-lighter);
-}
-.menu-toolbar :deep(.el-button + .el-button) {
-  margin-left: 0;
-}
-.menu-search {
-  width: 320px;
-  max-width: 100%;
 }
 @media (max-width: 720px) {
   .menu-management {

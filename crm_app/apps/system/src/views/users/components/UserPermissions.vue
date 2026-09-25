@@ -7,7 +7,6 @@ import type {
   UserPermissionsResponse,
   RoleSelectItem
 } from '../types'
-import UserRoleTags from './UserRoleTags.vue'
 
 const visible = defineModel<boolean>({ default: false })
 const props = defineProps<{
@@ -61,9 +60,11 @@ const nodes = computed(() => toNodes(props.permissions?.menus ?? []))
           <el-descriptions-item label="账号状态">{{
             permissions.accountStatus === 1 ? '正常' : '停用'
           }}</el-descriptions-item>
-          <el-descriptions-item label="所属角色"
-            ><UserRoleTags :roles="permissions.roles" :limit="4"
-          /></el-descriptions-item>
+          <el-descriptions-item label="所属角色">{{
+            permissions.roles
+              .map(role => `${role.roleName}${role.roleStatus === 0 ? '（停用）' : ''}`)
+              .join('、') || '-'
+          }}</el-descriptions-item>
           <el-descriptions-item label="权限范围">{{
             permissions.isSuperAdmin
               ? '全部权限（含后续新增权限）'
@@ -131,6 +132,20 @@ const nodes = computed(() => toNodes(props.permissions?.menus ?? []))
 }
 .permission-summary :deep(.el-descriptions__content) {
   overflow-wrap: anywhere;
+}
+.permission-summary :deep(.el-descriptions__table) {
+  table-layout: fixed;
+  width: 100%;
+}
+.permission-summary :deep(.el-descriptions__label) {
+  width: 90px;
+  min-width: 90px;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+.permission-summary :deep(.el-descriptions__content) {
+  min-width: 0;
+  vertical-align: top;
 }
 .permission-heading,
 .permission-label {

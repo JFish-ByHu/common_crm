@@ -62,13 +62,19 @@ export class MenusService {
 
   async saveMenu(input: MenuInput, actorId: string, menuId?: string) {
     if (input.menuType === 'PAGE') {
-      if (!input.componentKey || !input.routePath || input.routePath.endsWith('/'))
-        rejectPermissionInput('页面必须配置组件和不带末尾斜杠的路由路径')
-      if (!/^\/(system|customer)(\/|$)/.test(input.routePath!))
+      const path = input.routePath
+      if (path?.endsWith('/')) rejectPermissionInput('路由路径不能以斜杠结尾')
+      const parameters = path?.split('/').filter(part => part.startsWith(':')) ?? []
+      if (parameters.length !== new Set(parameters).size)
+        rejectPermissionInput('路由参数名不能重复')
+      if (parameters.length && input.visible)
+        rejectPermissionInput('包含动态参数的页面必须隐藏导航')
+      if (path && !/^\/(system|customer)(\/|$)/.test(path))
         rejectPermissionInput('页面路由必须位于 /system 或 /customer 下')
-      if (/\/access-denied(\/|$)/.test(input.routePath!) || input.routePath === '/system')
+      if (path && (/\/access-denied(\/|$)/.test(path) || path === '/system'))
         rejectPermissionInput('不能占用应用保留路由')
-      if (!input.routePath!.startsWith('/' + input.componentKey!.split('-')[0]))
+      const base = input.componentKey ? '/' + input.componentKey.split('-')[0] : null
+      if (path && base && path !== base && !path.startsWith(base + '/'))
         rejectPermissionInput('组件与所属应用路由不一致')
     } else if (input.componentKey || input.routePath)
       rejectPermissionInput('目录不绑定页面组件和路由')

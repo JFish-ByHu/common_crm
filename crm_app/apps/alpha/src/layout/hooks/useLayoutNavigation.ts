@@ -10,18 +10,20 @@ export const useLayoutNavigation = () => {
   const authorization = useAuthorizationStore()
   const convert = (menus: AuthorizedMenu[], root = true): LayoutMenuItem[] =>
     menus
-      .filter(menu => menu.visible)
-      .flatMap(menu => {
+      .filter(menu => menu.enabled && menu.visible && !menu.routePath?.includes(':'))
+      .map(menu => {
         const children = convert(menu.children, false)
-        if (menu.menuType === 'DIRECTORY' && !children.length) return []
-        return [
-          {
-            path: menu.routePath ?? `directory:${menu.menuId}`,
-            title: menu.name,
-            icon: root && menu.icon ? Icons[menu.icon as keyof typeof Icons] : undefined,
-            children: children.length ? children : undefined
-          }
-        ]
+        const isDirectory = menu.menuType === 'DIRECTORY'
+        return {
+          path: isDirectory
+            ? `directory:${menu.menuId}`
+            : menu.componentKey && menu.routePath
+              ? menu.routePath
+              : `unconfigured:${menu.menuId}`,
+          title: menu.name,
+          icon: root && menu.icon ? Icons[menu.icon as keyof typeof Icons] : undefined,
+          children: isDirectory ? children : undefined
+        }
       })
   const menuItems = computed<LayoutMenuItem[]>(() => [
     { path: '/dashboard', title: '控制台', icon: Icons.Odometer },
@@ -43,9 +45,7 @@ export const useLayoutNavigation = () => {
       : [
           {
             title:
-              authorization.pages.find(page => page.routePath === route.path)?.name ??
-              (route.meta.title as string) ??
-              '控制台'
+              authorization.findPage(route.path)?.name ?? (route.meta.title as string) ?? '控制台'
           }
         ]
   )

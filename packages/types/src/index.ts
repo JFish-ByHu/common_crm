@@ -1,3 +1,3 @@
-export * from './micro-app'
+export * from './micro-app.js'
 export type * from './api/index.js'
-export { pageCatalog } from './page-catalog'
+export type { PageDefinition, PageCatalogEntry } from './page.js'

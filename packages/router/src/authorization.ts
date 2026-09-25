@@ -1,5 +1,6 @@
 import { computed, shallowRef } from 'vue'
 import type { AuthorizedMenu, CurrentAuthorization } from '@common-crm/types/api'
+import { createAuthorizedPageMatcher } from './page-path'
 
 export const flattenAuthorizedMenus = (menus: AuthorizedMenu[]): AuthorizedMenu[] =>
   menus.flatMap(menu => [menu, ...flattenAuthorizedMenus(menu.children)])
@@ -17,8 +18,11 @@ export const createAuthorizationState = (
   let loadedAt = 0
   let generation = 0
   const pages = computed(() =>
-    flattenAuthorizedMenus(state.value?.menus ?? []).filter(menu => menu.menuType === 'PAGE')
+    flattenAuthorizedMenus(state.value?.menus ?? []).filter(
+      menu => menu.menuType === 'PAGE' && menu.componentKey && menu.routePath
+    )
   )
+  const matchPage = computed(() => createAuthorizedPageMatcher(pages.value))
   const clear = () => {
     state.value = null
     session = null
@@ -76,7 +80,7 @@ export const createAuthorizationState = (
     getSession() === session &&
     !!state.value &&
     (state.value.isSuperAdmin || state.value.permissions.includes(code))
-  const canVisit = (path: string): boolean =>
-    getSession() === session && pages.value.some(page => page.routePath === path)
-  return { state, pages, ensure, refresh, clear, hasPermission, canVisit }
+  const canVisit = (path: string): boolean => getSession() === session && !!matchPage.value(path)
+  const findPage = (path: string) => (getSession() === session ? matchPage.value(path) : undefined)
+  return { state, pages, ensure, refresh, clear, hasPermission, canVisit, findPage }
 }

@@ -12,7 +12,9 @@ export interface MenuInput {
   menuType: MenuType
   name: string
   permissionCode: string
+  /** 可留空；导航仍可展示，路由和组件均配置后才支持跳转。 */
   routePath: string | null
+  /** 可留空，表示暂不绑定页面组件。 */
   componentKey: string | null
   icon: string | null
   sortOrder: number

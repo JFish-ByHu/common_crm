@@ -29,6 +29,7 @@ export default tseslint.config(
   {
     files: ['**/*.vue'],
     languageOptions: {
+      globals: { definePage: 'readonly' },
       parserOptions: {
         parser: tseslint.parser
       }

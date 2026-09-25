@@ -1,10 +1,10 @@
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import qiankun from 'vite-plugin-qiankun'
-import { crmDevBackend } from '@common-crm/dev-tools'
+import { crmDevBackend, crmPages } from '@common-crm/dev-tools'
 
 export default defineConfig({
-  plugins: [vue(), qiankun('system', { useDevMode: true }), crmDevBackend()],
+  plugins: [crmPages(), vue(), qiankun('system', { useDevMode: true }), crmDevBackend()],
   server: {
     host: '0.0.0.0',
     port: 8802,

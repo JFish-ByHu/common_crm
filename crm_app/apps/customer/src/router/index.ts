@@ -1,5 +1,6 @@
 import { createMicroAppRouter, installPermissionRoutes } from '@common-crm/router'
 import { CrmAccessResult } from '@common-crm/components'
+import { pageComponents } from 'virtual:crm-pages/components'
 import { customerManifest, getMicroAppProps } from '../micro-app'
 import { authorization, ensureAuthorization } from '../services'
 
@@ -22,7 +23,8 @@ export const createCustomerRouter = () => {
     basePath: customerManifest.basePath,
     refresh: ensureAuthorization,
     pages: () => authorization.pages.value,
-    components: { 'customer-list': () => import('../views/customers/index.vue') }
+    components: pageComponents,
+    missingComponent: CrmAccessResult
   })
   return result
 }

@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": {
+      "types": "./client.d.ts"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -13,9 +16,14 @@
   "peerDependencies": {
     "vite": "^8.2.2"
   },
+  "dependencies": {
+    "@common-crm/types": "workspace:*",
+    "@vue/compiler-sfc": "^3.5.42",
+    "magic-string": "^0.30.21",
+    "typescript": "6.0.3"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "6.0.3",
     "vite": "^8.2.2"
   }
 }

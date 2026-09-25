@@ -52,14 +52,16 @@ export class MenuInputDto implements MenuInput {
   @Matches(/^[a-zA-Z][a-zA-Z0-9:_.-]{0,127}$/)
   permissionCode!: string
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() || null : (value ?? null)))
   @ValidateIf((_object, value) => value !== null)
-  @Matches(/^\/[a-zA-Z0-9/_-]*$/)
+  @Matches(/^(?:\/(?:[a-zA-Z0-9_-]+|:[a-zA-Z][a-zA-Z0-9_]*))+$/)
   @MaxLength(255)
-  routePath!: string | null
+  routePath: string | null = null
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() || null : (value ?? null)))
   @ValidateIf((_object, value) => value !== null)
   @Matches(/^[a-z][a-z0-9-]{0,127}$/)
-  componentKey!: string | null
+  componentKey: string | null = null
 
   @ValidateIf((_object, value) => value !== null)
   @IsString()

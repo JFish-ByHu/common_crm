@@ -8,6 +8,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./micro-app": "./src/micro-app.ts",
+    "./page": {
+      "types": "./src/page.ts"
+    },
     "./api": {
       "types": "./src/api/index.d.ts"
     }
