@@ -156,3 +156,21 @@ model CrmPermissionAudit {
   @@index([createTime])
   @@map("crm_permission_audits")
 }
+
+model CrmFile {
+  fileId       String @id @db.VarChar(64)
+  category     String @db.VarChar(16)
+  originalName String @db.VarChar(255)
+  storageKey   String @unique @db.VarChar(255)
+  mimeType     String @db.VarChar(128)
+  extension    String @db.VarChar(16)
+  size         Int    @db.UnsignedInt
+  uploadedBy   String @db.VarChar(64)
+  status       String @default("TEMPORARY") @db.VarChar(16)
+  createTime   BigInt @db.UnsignedBigInt
+  updateTime   BigInt @db.UnsignedBigInt
+
+  @@index([uploadedBy, createTime])
+  @@index([status, createTime])
+  @@map("crm_files")
+}

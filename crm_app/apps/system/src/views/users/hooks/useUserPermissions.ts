@@ -1,5 +1,5 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
-import { Notification } from '@common-crm/utils'
+import { notifyRequestError } from '@common-crm/utils'
 import { isRequestCanceled, queryUserPermissions } from '../../../services'
 import { getUserErrorMessage } from '../utils'
 import type { UserListItem, UserPermissionsResponse } from '../types'
@@ -36,7 +36,7 @@ export const useUserPermissions = () => {
         !disposed &&
         !isRequestCanceled(error)
       ) {
-        Notification.error({
+        notifyRequestError(error, {
           title: '请求失败',
           message: getUserErrorMessage(error, '用户权限加载失败，请稍后重试')
         })

@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { MenuErrors } from '@common-crm/errors'
 import type {
   AuthorizedMenu,
   CurrentAuthorization,
@@ -7,7 +8,7 @@ import type {
   UserPermissionsResponse,
   RoleSelectItem
 } from '@common-crm/types/api'
-import { parseBinaryStatus, Result, StatusCode } from '../../../common'
+import { parseBinaryStatus, BusinessError } from '../../../common'
 import { RedisService } from '../../../database'
 import { AuthorizationRepository } from '../repositories'
 import { endpointKey, type AuthorizationSnapshot } from '../types'
@@ -97,7 +98,7 @@ export class AuthorizationService {
       snapshot.endpoints.some(rule => endpointKey(rule) === `${httpMethod} ${path}`)
     )
       return
-    throw new ForbiddenException(Result.failure(StatusCode.NO_PERMISSION, null, '没有该操作的权限'))
+    throw new BusinessError(MenuErrors.NO_PERMISSION)
   }
 
   private async snapshot(userId: string): Promise<AuthorizationSnapshot> {

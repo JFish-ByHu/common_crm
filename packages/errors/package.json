@@ -1,0 +1,22 @@
+{
+  "name": "@common-crm/errors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && node scripts/check-codes.mjs",
+    "typecheck": "tsc && node scripts/check-codes.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

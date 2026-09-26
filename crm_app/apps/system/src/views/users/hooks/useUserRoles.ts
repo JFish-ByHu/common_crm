@@ -1,5 +1,5 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { Message, Notification } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import {
   ApiError,
   assignUserRoles,
@@ -51,7 +51,7 @@ export const useUserRoles = (onRolesSaved: (userId: string, roles: RoleSelectIte
     } catch (error) {
       if (!request.signal.aborted && !isRequestCanceled(error)) {
         request.abort()
-        Notification.error({
+        notifyRequestError(error, {
           title: '请求失败',
           message: error instanceof ApiError ? error.message : '用户角色加载失败，请稍后重试'
         })
@@ -95,7 +95,7 @@ export const useUserRoles = (onRolesSaved: (userId: string, roles: RoleSelectIte
       saved = true
     } catch (error) {
       if (!disposed)
-        Notification.error({
+        notifyRequestError(error, {
           title: '分配失败',
           message: error instanceof ApiError ? error.message : '角色分配失败，请稍后重试'
         })

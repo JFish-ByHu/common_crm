@@ -11,7 +11,7 @@ JWT 载荷、会话记录及密码摘要等内部类型仍保留在模块内。
 | `services/auth-token.service.ts`          | JWT 签发、校验和 refresh token 摘要          |
 | `repositories/auth-user.repository.ts`    | 认证专用账号查询、密码修改与会话撤销         |
 | `repositories/auth-session.repository.ts` | 登录会话持久化及有效会话查询                 |
-| `auth-result.presenter.ts`                | 成功与已知业务错误的统一响应                 |
+| `auth-result.presenter.ts`                | 包装成功响应，业务异常由全局过滤器处理       |
 | `dto/`                                    | 请求参数校验                                 |
 | `guards/`                                 | access token 和会话鉴权                      |
 | `decorators/`                             | 提取当前用户                                 |

@@ -17,6 +17,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
+    "@common-crm/errors": "workspace:*",
     "@common-crm/types": "workspace:*",
     "@vue/compiler-sfc": "^3.5.42",
     "magic-string": "^0.30.21",

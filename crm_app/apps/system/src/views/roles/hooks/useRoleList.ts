@@ -1,5 +1,5 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { Notification } from '@common-crm/utils'
+import { notifyRequestError } from '@common-crm/utils'
 import { ApiError, isRequestCanceled, queryRoleList } from '../../../services'
 import type { RoleFilters, RoleListItem } from '../types'
 
@@ -49,7 +49,7 @@ export const useRoleList = () => {
       if (request.signal.aborted || isRequestCanceled(error)) return false
       roles.value = []
       total.value = 0
-      Notification.error({
+      notifyRequestError(error, {
         title: '请求失败',
         message: error instanceof ApiError ? error.message : '角色列表加载失败，请稍后重试'
       })

@@ -12,3 +12,5 @@ dist/
 crm_serve/prisma.config.js
 crm_serve/prisma.config.js.map
 crm_serve/prisma.config.d.ts
+crm_serve/storage/uploads/*
+!crm_serve/storage/uploads/.gitkeep

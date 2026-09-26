@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Check, Close, Refresh } from '@element-plus/icons-vue'
 import type { ElTree } from 'element-plus'
-import { Message, Notification } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import type { MenuItem, RolePermissions } from '@common-crm/types/api'
 import {
   ApiError,
@@ -30,7 +30,6 @@ const saving = ref(false)
 const loaded = ref(false)
 const keyword = ref('')
 let controller: AbortController | undefined
-let settingKeys = false
 const nodes = computed(() => {
   const convert = (items: MenuItem[]): PermissionNode[] =>
     items.map(menu => ({
@@ -51,7 +50,7 @@ const nodes = computed(() => {
   return convert(menus.value)
 })
 const reportFailure = (error: unknown) =>
-  Notification.error({
+  notifyRequestError(error, {
     title: '权限配置失败',
     message: error instanceof ApiError ? error.message : '请求失败，请重试'
   })
@@ -73,14 +72,12 @@ const loadPermissions = async () => {
     await nextTick()
     const allIds = (items: PermissionNode[]): string[] =>
       items.flatMap(item => [item.id, ...allIds(item.children ?? [])])
-    settingKeys = true
     treeRef.value?.setCheckedKeys(
       grants.data?.isSystem
         ? allIds(nodes.value)
         : [...(grants.data?.menuIds ?? []), ...(grants.data?.actionIds ?? [])]
     )
     await nextTick()
-    settingKeys = false
     loaded.value = !!grants.data
   } catch (error) {
     if (!request.signal.aborted) reportFailure(error)
@@ -100,24 +97,27 @@ watch(visible, open => {
     loaded.value = false
   }
 })
-// Strict checking avoids granting every button when only its parent page is checked.
-const selectNode = (node: PermissionNode, checked: boolean) => {
-  if (settingKeys) return
-  const current = treeRef.value?.getNode(node.id)
+// 仅用户勾选时联动整棵子树；保留严格模式，确保回显已有授权不会自动扩大权限。
+const selectNode = (node: PermissionNode, state: { checkedKeys: (string | number)[] }) => {
+  if (loading.value || saving.value || !loaded.value || permissions.value?.isSystem) return
+  const tree = treeRef.value
+  const current = tree?.getNode(node.id)
   if (!current) return
+  const checked = state.checkedKeys.includes(node.id)
+  const selectDescendants = (children: PermissionNode[]) => {
+    for (const child of children) {
+      if (child.disabled) continue
+      tree?.setChecked(child.id, checked, false)
+      selectDescendants(child.children ?? [])
+    }
+  }
+  selectDescendants(node.children ?? [])
   if (checked) {
     let parent = current.parent
     while (parent?.data?.id) {
-      treeRef.value?.setChecked(parent.data.id, true, false)
+      tree?.setChecked(parent.data.id, true, false)
       parent = parent.parent
     }
-  } else {
-    const clear = (children: PermissionNode[]) =>
-      children.forEach(child => {
-        treeRef.value?.setChecked(child.id, false, false)
-        clear(child.children ?? [])
-      })
-    clear(node.children ?? [])
   }
 }
 const savePermissions = async () => {
@@ -182,7 +182,7 @@ onBeforeUnmount(() => controller?.abort())
         default-expand-all
         :filter-node-method="filterNode"
         :props="{ label: 'label', children: 'children', disabled: 'disabled' }"
-        @check-change="selectNode"
+        @check="selectNode"
       />
     </div>
     <template #footer

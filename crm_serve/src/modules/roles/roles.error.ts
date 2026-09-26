@@ -1,14 +1,12 @@
-export type RolesErrorCode =
-  | 'INVALID_INPUT'
-  | 'ROLE_NOT_FOUND'
-  | 'ROLE_CONFLICT'
-  | 'ROLE_IN_USE'
-  | 'ROLE_DISABLED'
-  | 'USER_NOT_FOUND'
+import { RoleErrors, UserErrors } from '@common-crm/errors'
+import { BusinessError } from '../../common'
 
-export class RolesError extends Error {
-  constructor(readonly code: RolesErrorCode) {
-    super(code)
+const definitions = { ...RoleErrors, USER_NOT_FOUND: UserErrors.USER_NOT_FOUND }
+export type RolesErrorCode = keyof typeof definitions
+
+export class RolesError extends BusinessError {
+  constructor(key: RolesErrorCode) {
+    super(definitions[key])
     this.name = 'RolesError'
   }
 }

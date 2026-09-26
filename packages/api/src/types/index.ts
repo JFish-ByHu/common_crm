@@ -9,6 +9,7 @@ export interface ApiClientConfig {
   withCredentials?: boolean
   /** 是否显示请求进度条，默认 true。 */
   showProgress?: boolean
+  /** 负责会话失效提醒和退出跳转；请求层按会话去重，页面不再重复通知。 */
   onUnauthorized?: () => void | Promise<void>
   getAccessToken?: () => string | null
 }

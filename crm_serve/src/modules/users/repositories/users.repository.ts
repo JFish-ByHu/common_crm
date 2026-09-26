@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { UserErrors } from '@common-crm/errors'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp, Result, StatusCode } from '../../../common'
+import { currentTimestamp, BusinessError } from '../../../common'
 import { PrismaService } from '../../../database'
 import { UsersError } from '../users.error'
 import {
@@ -153,14 +154,7 @@ export class UsersRepository {
     const count = await transaction.crmUserRole.count({
       where: { userId: { in: userIds }, role: { isSystem: true } }
     })
-    if (count)
-      throw new ForbiddenException(
-        Result.failure(
-          StatusCode.NO_PERMISSION,
-          null,
-          '系统管理员账号不能停用、删除或被其他用户修改'
-        )
-      )
+    if (count) throw new BusinessError(UserErrors.SYSTEM_USER_PROTECTED)
   }
 
   private async query<Select extends Prisma.CrmUserSelect>(
@@ -210,7 +204,13 @@ export class UsersRepository {
       return await operation()
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') throw new UsersError('USER_CONFLICT')
+        if (error.code === 'P2002') {
+          const target = error.meta?.target
+          const constraint = Array.isArray(target) ? target.join(',') : String(target ?? '')
+          if (constraint.includes('username')) throw new UsersError('USERNAME_EXISTS')
+          if (constraint.includes('email')) throw new UsersError('EMAIL_EXISTS')
+          throw new UsersError('USER_CONFLICT')
+        }
         if (error.code === 'P2025') throw new UsersError('USER_NOT_FOUND')
       }
       throw error

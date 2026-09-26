@@ -1,4 +1,5 @@
 import { createLogger, type Plugin } from 'vite'
+import { CommonErrors } from '@common-crm/errors'
 import { isBackendConnectionError, waitForBackend } from './backend-readiness.ts'
 
 /** 三个前端应用共用的本地后端就绪检测与代理配置，仅开发模式启用。 */
@@ -40,14 +41,18 @@ export const crmDevBackend = (
                 reportUnavailable()
                 if (!('writeHead' in response) || response.headersSent || response.writableEnded)
                   return
-                response.writeHead(503, {
+                response.writeHead(CommonErrors.SERVICE_UNAVAILABLE.httpStatus, {
                   'Content-Type': 'application/json; charset=utf-8',
                   'Cache-Control': 'no-store',
                   'Retry-After': '1',
                   'X-Crm-Dev-Backend-Unavailable': '1'
                 })
                 response.end(
-                  JSON.stringify({ code: 503, data: null, msg: '后端服务暂不可用，请稍后重试' })
+                  JSON.stringify({
+                    code: CommonErrors.SERVICE_UNAVAILABLE.code,
+                    data: null,
+                    msg: CommonErrors.SERVICE_UNAVAILABLE.msg
+                  })
                 )
               })
               proxy.on('proxyRes', () => {

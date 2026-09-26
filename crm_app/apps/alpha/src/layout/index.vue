@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Message } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import { useAuthStore, useThemeStore } from '../stores'
 import { logout as revokeSession } from '../services'
 import { HeaderBar, MainContent, Sidebar } from './components'
@@ -34,9 +34,9 @@ const logout = async () => {
     authStore.logout()
     await router.push('/login')
     Message.success('已退出登录')
-  } catch {
+  } catch (error) {
     resumeHeartbeat()
-    Message.error('退出登录失败，请稍后重试')
+    notifyRequestError(error, { title: '退出失败', message: '退出登录失败，请稍后重试' })
   } finally {
     loggingOut.value = false
   }

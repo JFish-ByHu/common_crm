@@ -8,7 +8,7 @@ import {
   updateUser,
   updateUserAccountStatus
 } from '../../../services'
-import { Message, Notification } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import type { UserFormValues, UserListItem } from '../types'
 import { getUserErrorMessage } from '../utils'
 
@@ -63,7 +63,7 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
       refreshed = await refreshUserList()
     } catch (error) {
       if (!disposed) {
-        Notification.error({
+        notifyRequestError(error, {
           title: '保存失败',
           message: getUserErrorMessage(error, '保存用户失败，请稍后重试')
         })
@@ -100,7 +100,7 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
       refreshed = await refreshUserList()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close' && !disposed) {
-        Notification.error({
+        notifyRequestError(error, {
           title: '操作失败',
           message: getUserErrorMessage(error, '操作失败，请稍后重试')
         })

@@ -1,6 +1,6 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { isRequestCanceled, queryUserList } from '../../../services'
-import { Notification } from '@common-crm/utils'
+import { notifyRequestError } from '@common-crm/utils'
 import type { UserFilters, UserListItem } from '../types'
 import { getUserErrorMessage } from '../utils'
 
@@ -56,7 +56,7 @@ export const useUserList = () => {
       if (controller.signal.aborted || isRequestCanceled(error)) return false
       users.value = []
       total.value = 0
-      Notification.error({
+      notifyRequestError(error, {
         title: '请求失败',
         message: getUserErrorMessage(error, '用户列表加载失败，请稍后重试')
       })

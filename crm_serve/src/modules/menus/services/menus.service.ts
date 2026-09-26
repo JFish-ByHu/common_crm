@@ -1,3 +1,4 @@
+import { MenuErrors } from '@common-crm/errors'
 import { Injectable } from '@nestjs/common'
 import type {
   AssignRolePermissionsRequest,
@@ -51,7 +52,7 @@ export class MenusService {
 
   async findActions(menuId: string) {
     const menu = (await this.repository.findAll()).find(item => item.menuId === menuId)
-    if (!menu) return rejectPermissionInput('菜单不存在', 404)
+    if (!menu) return rejectPermissionInput(MenuErrors.MENU_NOT_FOUND)
     return menu.actions.map(({ rules, ...action }) => ({
       ...action,
       createTime: formatApiDateTime(action.createTime),
@@ -63,21 +64,21 @@ export class MenusService {
   async saveMenu(input: MenuInput, actorId: string, menuId?: string) {
     if (input.menuType === 'PAGE') {
       const path = input.routePath
-      if (path?.endsWith('/')) rejectPermissionInput('路由路径不能以斜杠结尾')
+      if (path?.endsWith('/')) rejectPermissionInput(MenuErrors.TRAILING_SLASH)
       const parameters = path?.split('/').filter(part => part.startsWith(':')) ?? []
       if (parameters.length !== new Set(parameters).size)
-        rejectPermissionInput('路由参数名不能重复')
+        rejectPermissionInput(MenuErrors.DUPLICATE_PARAMETER)
       if (parameters.length && input.visible)
-        rejectPermissionInput('包含动态参数的页面必须隐藏导航')
+        rejectPermissionInput(MenuErrors.PARAMETER_PAGE_VISIBLE)
       if (path && !/^\/(system|customer)(\/|$)/.test(path))
-        rejectPermissionInput('页面路由必须位于 /system 或 /customer 下')
+        rejectPermissionInput(MenuErrors.INVALID_APP_PATH)
       if (path && (/\/access-denied(\/|$)/.test(path) || path === '/system'))
-        rejectPermissionInput('不能占用应用保留路由')
+        rejectPermissionInput(MenuErrors.RESERVED_ROUTE)
       const base = input.componentKey ? '/' + input.componentKey.split('-')[0] : null
       if (path && base && path !== base && !path.startsWith(base + '/'))
-        rejectPermissionInput('组件与所属应用路由不一致')
+        rejectPermissionInput(MenuErrors.COMPONENT_APP_MISMATCH)
     } else if (input.componentKey || input.routePath)
-      rejectPermissionInput('目录不绑定页面组件和路由')
+      rejectPermissionInput(MenuErrors.DIRECTORY_HAS_PAGE)
     await this.repository.saveMenu(input, actorId, menuId, !menuId)
     return null
   }
@@ -88,9 +89,9 @@ export class MenusService {
 
   saveAction(input: MenuActionInput, actorId: string, actionId?: string) {
     if (input.rules.some(rule => !this.endpoints.contains(rule)))
-      rejectPermissionInput('包含不存在或不允许配置的接口')
+      rejectPermissionInput(MenuErrors.UNKNOWN_ENDPOINT)
     const keys = input.rules.map(rule => `${rule.httpMethod} ${rule.path}`)
-    if (new Set(keys).size !== keys.length) rejectPermissionInput('接口不能重复绑定')
+    if (new Set(keys).size !== keys.length) rejectPermissionInput(MenuErrors.DUPLICATE_ENDPOINT)
     return this.repository.saveAction(input, actorId, actionId, !actionId)
   }
 

@@ -3,9 +3,9 @@ import { type FormInstance, type FormRules } from 'element-plus'
 import { Moon, Sunny } from '@element-plus/icons-vue'
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Message } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import { useThemeStore, useAuthStore } from '../../stores'
-import { login, ApiError } from '../../services'
+import { login } from '../../services'
 import LoginAnimation from './components/LoginAnimation.vue'
 
 const router = useRouter()
@@ -53,7 +53,7 @@ const submitLogin = async () => {
     })
 
     if (!res.data) {
-      Message.error(res.msg || '登录响应无效')
+      notifyRequestError(null, { title: '登录失败', message: '登录响应无效，请稍后重试' })
       return
     }
 
@@ -67,17 +67,12 @@ const submitLogin = async () => {
       authStore.clearRememberedCredentials()
     }
 
-    Message.success('登录成功')
-
     // 跳转到重定向地址或控制台
     const redirect = router.currentRoute.value.query.redirect as string
-    router.push(redirect || '/dashboard')
+    await router.push(redirect || '/dashboard')
+    Message.success('登录成功')
   } catch (error) {
-    if (error instanceof ApiError) {
-      Message.error(error.message || '登录失败')
-    } else {
-      Message.error('网络错误，请稍后重试')
-    }
+    notifyRequestError(error, { title: '登录失败', message: '登录失败，请稍后重试' })
     console.error('登录失败:', error)
   } finally {
     submitting.value = false

@@ -1,9 +1,10 @@
-import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common'
+import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { Result, StatusCode } from './common/http'
+import { CommonErrors } from '@common-crm/errors'
+import { BusinessError } from './common/http'
 
-async function bootstrap() {
+const bootstrap = async () => {
   const app = await NestFactory.create(AppModule)
   app.setGlobalPrefix('api')
   app.useGlobalPipes(
@@ -11,8 +12,7 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-      exceptionFactory: () =>
-        new UnprocessableEntityException(Result.failure(StatusCode.VALIDATION_FAILED))
+      exceptionFactory: () => new BusinessError(CommonErrors.VALIDATION_FAILED)
     })
   )
   await app.listen(process.env.PORT ?? 3000)

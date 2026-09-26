@@ -1,5 +1,5 @@
 import type { ApiResponse } from '@common-crm/types/api'
-import { StatusCode, type StatusDefinition } from './status-code'
+import { CommonErrors } from '@common-crm/errors'
 
 export class Result<T = unknown> implements ApiResponse<T> {
   constructor(
@@ -8,12 +8,12 @@ export class Result<T = unknown> implements ApiResponse<T> {
     public readonly msg: string
   ) {}
 
-  static success<T = unknown>(data: T | null = null, msg = StatusCode.SUCCESS.msg) {
-    return new Result(StatusCode.SUCCESS.code, data, msg)
+  static success<T = unknown>(data: T | null = null, msg = 'SUCCESS') {
+    return new Result(200, data, msg)
   }
 
   static failure<T = unknown>(
-    status: StatusDefinition = StatusCode.INTERNAL_SERVER_ERROR,
+    status: Pick<ApiResponse, 'code' | 'msg'> = CommonErrors.INTERNAL_ERROR,
     data: T | null = null,
     msg = status.msg
   ) {

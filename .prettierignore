@@ -4,3 +4,5 @@ coverage/
 pnpm-lock.yaml
 .legacy-app-dependencies/
 .crm_serve_before_nest_cli/
+# TypeScript-generated declarations; update through @common-crm/errors typecheck.
+packages/errors/types/

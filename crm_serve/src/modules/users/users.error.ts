@@ -1,8 +1,11 @@
-export type UsersErrorCode = 'INVALID_INPUT' | 'USER_NOT_FOUND' | 'USER_CONFLICT'
+import { UserErrors } from '@common-crm/errors'
+import { BusinessError } from '../../common'
 
-export class UsersError extends Error {
-  constructor(public readonly code: UsersErrorCode) {
-    super(code)
+export type UsersErrorCode = keyof typeof UserErrors
+
+export class UsersError extends BusinessError {
+  constructor(key: UsersErrorCode) {
+    super(UserErrors[key])
     this.name = 'UsersError'
   }
 }

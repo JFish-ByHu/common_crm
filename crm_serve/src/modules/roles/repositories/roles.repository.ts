@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { RoleErrors } from '@common-crm/errors'
 import { Prisma } from '@prisma/client'
-import { currentTimestamp, Result, StatusCode } from '../../../common'
+import { currentTimestamp, BusinessError } from '../../../common'
 import { PrismaService } from '../../../database'
 import { RolesError } from '../roles.error'
 import { RoleStatus, type CreateRoleInput, type RoleSearch, type UpdateRoleInput } from '../types'
@@ -60,10 +61,7 @@ export class RolesRepository {
       this.prisma.$transaction(async tx => {
         await tx.$queryRaw`SELECT id FROM crm_authorization_state WHERE id = 1 FOR UPDATE`
         const role = await tx.crmRole.findUnique({ where: { roleId } })
-        if (role?.isSystem)
-          throw new ForbiddenException(
-            Result.failure(StatusCode.NO_PERMISSION, null, '系统管理角色不可修改')
-          )
+        if (role?.isSystem) throw new BusinessError(RoleErrors.SYSTEM_ROLE_IMMUTABLE)
         const result = await tx.crmRole.update({
           where: { roleId },
           data: { ...input, updateTime: currentTimestamp() },
@@ -84,9 +82,7 @@ export class RolesRepository {
       this.prisma.$transaction(async transaction => {
         await transaction.$queryRaw`SELECT id FROM crm_authorization_state WHERE id = 1 FOR UPDATE`
         if (await transaction.crmRole.count({ where: { roleId: { in: roleIds }, isSystem: true } }))
-          throw new ForbiddenException(
-            Result.failure(StatusCode.NO_PERMISSION, null, '系统管理角色不可删除')
-          )
+          throw new BusinessError(RoleErrors.SYSTEM_ROLE_UNDELETABLE)
         const roles = await transaction.$queryRaw<{ roleId: string }[]>(Prisma.sql`
         SELECT roleId FROM crm_roles WHERE roleId IN (${Prisma.join(roleIds)}) ORDER BY roleId FOR UPDATE
       `)
@@ -127,13 +123,7 @@ export class RolesRepository {
           select: { roleId: true, users: { where: { userId }, select: { userId: true } } }
         })
         if (systemRoles.some(role => roleIds.includes(role.roleId) !== role.users.length > 0))
-          throw new ForbiddenException(
-            Result.failure(
-              StatusCode.NO_PERMISSION,
-              null,
-              '系统管理角色的成员关系不可通过业务接口修改'
-            )
-          )
+          throw new BusinessError(RoleErrors.SYSTEM_ROLE_MEMBERS_PROTECTED)
         const users = await transaction.$queryRaw<{ userId: string }[]>`
         SELECT userId FROM crm_users WHERE userId = ${userId} FOR UPDATE
       `

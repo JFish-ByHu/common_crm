@@ -6,20 +6,20 @@
 
 ## 接口列表
 
-| 方法   | 路径                             | 用途         |
-| ------ | -------------------------------- | ------------ |
-| GET    | `/api/users/list`                | 用户列表     |
-| GET    | `/api/users/selectList`          | 用户下拉选项 |
-| GET    | `/api/users/onlineStatus`        | 批量在线状态 |
-| POST   | `/api/users/create`              | 创建用户     |
-| PATCH  | `/api/users/update`              | 编辑用户     |
-| PATCH  | `/api/users/updateAccountStatus` | 修改账号状态 |
-| DELETE | `/api/users/delete`              | 单个删除     |
-| DELETE | `/api/users/batchDelete`         | 批量删除     |
-| POST   | `/api/users/logout`              | 强制登出     |
-| GET    | `/api/users/roles`               | 已分配角色   |
+| 方法   | 路径                             | 用途           |
+| ------ | -------------------------------- | -------------- |
+| GET    | `/api/users/list`                | 用户列表       |
+| GET    | `/api/users/selectList`          | 用户下拉选项   |
+| GET    | `/api/users/onlineStatus`        | 批量在线状态   |
+| POST   | `/api/users/create`              | 创建用户       |
+| PATCH  | `/api/users/update`              | 编辑用户       |
+| PATCH  | `/api/users/updateAccountStatus` | 修改账号状态   |
+| DELETE | `/api/users/delete`              | 单个删除       |
+| DELETE | `/api/users/batchDelete`         | 批量删除       |
+| POST   | `/api/users/logout`              | 强制登出       |
+| GET    | `/api/users/roles`               | 已分配角色     |
 | GET    | `/api/users/permissions`         | 有效权限与来源 |
-| PATCH  | `/api/users/assignRoles`         | 分配角色     |
+| PATCH  | `/api/users/assignRoles`         | 分配角色       |
 
 `accountStatus` 为数字：`1` 正常，`0` 停用。
 
@@ -82,7 +82,7 @@ GET /api/users/selectList?username=admin&page=1&pageSize=20
 查询实时读取数据库同一快照，与实际鉴权共用授权计算逻辑；每个菜单和按钮的 `sourceRoles` 标明授权来源。
 多个启用角色的权限取并集；停用角色、停用菜单及其后代、停用按钮均不计入。仅隐藏导航不撤销访问。
 账号停用时有效菜单为空，保留角色信息帮助排查。管理员标记“全部权限（含后续新增权限）”，菜单树展示当前启用配置。
-用户不存在时返回用户模块统一的 404 业务错误。接口不写死权限标识，沿用数据库接口映射和全局守卫。
+用户不存在时返回HTTP 404 / 120001 用户不存在错误。接口不写死权限标识，沿用数据库接口映射和全局守卫。
 数据迁移 `20260924020000_add_user_permission_view` 添加“查看权限”按钮及接口绑定，默认不向普通角色追加授权；可在角色管理中分配。
 前端通过 `system:users:viewPermissions` 控制“查看权限”操作，详情默认使用只读抽屉，不修改角色或授权。
 
@@ -219,16 +219,18 @@ Content-Type: application/json
 
 ## 错误约定
 
-与现有认证接口一致，已知业务错误通过响应体 `code` 表达，HTTP 状态为 200：
+失败返回 HTTP 4xx/5xx 和六位业务码，不再使用 HTTP 200 承载失败。
 
-| 业务码 | 场景                                         |
-| ------ | -------------------------------------------- |
-| 400    | 编辑未传可更新字段，或分页偏移量超过支持范围 |
-| 404    | 待编辑、修改状态或删除的用户不存在           |
-| 409    | 用户名或邮箱重复                             |
+| 业务码          | HTTP | 场景                           |
+| --------------- | ---- | ------------------------------ |
+| 120005          | 400  | 用户参数无效或没有可更新字段   |
+| 120001          | 404  | 用户不存在                     |
+| 120002 / 120003 | 409  | 用户名重复 / 邮箱重复          |
+| 120004          | 409  | 未能识别具体字段的唯一约束冲突 |
+| 120006          | 403  | 系统管理员账号受保护           |
 
-DTO 校验失败返回 HTTP 422 和业务码 422；未登录、会话失效或账号停用返回 HTTP 401
-和业务码 401。未知字段会被拒绝，不会静默用于更新数据库。
+DTO 校验失败为 HTTP 422 / 100002；访问会话失效为 HTTP 401 / 110002。未知字段仍拒绝。
+完整定义位于 @common-crm/errors。
 
 ## 实现位置
 
@@ -237,7 +239,7 @@ DTO 校验失败返回 HTTP 422 和业务码 422；未登录、会话失效或�
 
 `users.controller.ts` 声明路由与接口注释，`dto/` 校验入参，`services/users.service.ts`
 处理分页默认值、密码摘要和用户 ID 生成，`repositories/users.repository.ts` 封装查询、写入和事务。
-根目录的 `users-result.presenter.ts` 负责统一成功与业务错误响应，测试按需放在 `tests/`。
+根目录的 `users-result.presenter.ts` 只包装成功响应，业务异常由全局过滤器处理，测试按需放在 `tests/`。
 
 数据库中的用户及认证会话时间统一使用 `BIGINT UNSIGNED` 保存 13 位 Unix 毫秒时间戳。
 `prisma/migrations/20260920000000_use_epoch_millisecond_timestamps` 负责将已有

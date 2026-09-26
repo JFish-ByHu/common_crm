@@ -1,6 +1,7 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import type { Request } from 'express'
-import { Result, StatusCode } from '../../../common'
+import { AuthErrors } from '@common-crm/errors'
+import { BusinessError } from '../../../common'
 import { AuthService } from '../services'
 import type { AuthenticatedUser } from '../types'
 
@@ -37,6 +38,6 @@ export class AccessTokenGuard implements CanActivate {
   }
 
   private throwUnauthorized(): never {
-    throw new UnauthorizedException(Result.failure(StatusCode.UNAUTHORIZED))
+    throw new BusinessError(AuthErrors.SESSION_EXPIRED)
   }
 }

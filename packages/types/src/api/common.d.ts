@@ -1,5 +1,6 @@
 /** 前后端统一响应；失败或无返回数据时 data 为 null。 */
 export interface ApiResponse<T = unknown> {
+  /** 成功为 200/201；失败为 @common-crm/errors 定义的六位业务码，与 HTTP 状态独立。 */
   code: number
   data: T | null
   msg: string

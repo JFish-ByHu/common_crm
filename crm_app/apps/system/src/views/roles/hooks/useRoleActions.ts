@@ -1,6 +1,6 @@
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { Message, Notification } from '@common-crm/utils'
+import { Message, notifyRequestError } from '@common-crm/utils'
 import {
   ApiError,
   batchDeleteRoles,
@@ -24,7 +24,7 @@ export const useRoleActions = (refreshRoleList: () => Promise<boolean>) => {
   })
 
   const reportFailure = (error: unknown) =>
-    Notification.error({
+    notifyRequestError(error, {
       title: '操作失败',
       message: error instanceof ApiError ? error.message : '操作失败，请稍后重试'
     })

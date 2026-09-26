@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig
 } from 'axios'
 import NProgress from 'nprogress'
+import { isUnauthorizedError } from '@common-crm/errors'
 import type { ApiClientConfig, ApiErrorKind, ApiRequestConfig, ApiResponse } from '../types'
 import { requestWithDevRetry } from './retry'
 
@@ -15,17 +16,17 @@ NProgress.configure({ showSpinner: false })
 type InternalApiRequestConfig = InternalAxiosRequestConfig &
   Pick<ApiRequestConfig, 'requiresAuth' | 'showProgress' | 'retryOnUnavailable'>
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function getResponseCode(data: unknown): number | undefined {
+const getResponseCode = (data: unknown): number | undefined => {
   return isRecord(data) && typeof data.code === 'number' && Number.isInteger(data.code)
     ? data.code
     : undefined
 }
 
-function getErrorMessage(data: unknown, fallback: string): string {
+const getErrorMessage = (data: unknown, fallback: string): string => {
   if (!isRecord(data)) return fallback
   if (typeof data.msg === 'string' && data.msg.trim()) return data.msg
   if (typeof data.message === 'string' && data.message.trim()) return data.message
@@ -39,6 +40,8 @@ function getErrorMessage(data: unknown, fallback: string): string {
 }
 
 export class ApiError extends Error {
+  /** 会话处理层已负责提醒或忽略旧会话错误，页面无需再次弹出通知。 */
+  notificationHandled = false
   readonly kind: ApiErrorKind
   readonly cause?: unknown
 
@@ -58,7 +61,7 @@ export class ApiError extends Error {
 
 export const isRequestCanceled = axios.isCancel
 
-function normalizeError(error: unknown): ApiError {
+const normalizeError = (error: unknown): ApiError => {
   if (error instanceof ApiError) return error
   if (!axios.isAxiosError<unknown>(error)) {
     return new ApiError(
@@ -103,7 +106,7 @@ function normalizeError(error: unknown): ApiError {
   )
 }
 
-export function initRequest(config: ApiClientConfig): AxiosInstance {
+export const initRequest = (config: ApiClientConfig): AxiosInstance => {
   const instance = axios.create({
     baseURL: config.baseURL,
     timeout: config.timeout ?? 10000,
@@ -117,7 +120,7 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
     { token: string | null; version: number }
   >()
 
-  function getSession() {
+  const getSession = () => {
     const token = config.getAccessToken?.() ?? null
     if (token !== sessionToken) {
       sessionToken = token
@@ -129,7 +132,8 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
   const processUnauthorizedSession = async (
     requestConfig: InternalApiRequestConfig | undefined
   ) => {
-    if (!requestConfig || requestConfig.requiresAuth === false || !config.onUnauthorized) return
+    if (!requestConfig || requestConfig.requiresAuth === false || !config.onUnauthorized)
+      return false
     const sentSession = requestSessions.get(requestConfig)
     const currentSession = getSession()
 
@@ -139,12 +143,14 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
       sentSession.version !== currentSession.version ||
       unauthorizedVersion === sentSession.version
     )
-      return
+      return true
     unauthorizedVersion = sentSession.version
     try {
       await config.onUnauthorized()
+      return true
     } catch {
       // 保留原始请求错误，避免跳转失败覆盖业务错误。
+      return false
     }
   }
 
@@ -187,22 +193,24 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
     async (response: AxiosResponse<unknown>) => {
       const code = getResponseCode(response.data)
       if (code !== undefined && code >= 400) {
-        if (code === 401) await processUnauthorizedSession(response.config)
-        throw new ApiError(
+        const apiError = new ApiError(
           getErrorMessage(response.data, '请求失败'),
           code,
           response.status,
           response.data,
           { kind: 'business' }
         )
+        if (isUnauthorizedError(code, response.status))
+          apiError.notificationHandled = await processUnauthorizedSession(response.config)
+        throw apiError
       }
       return response
     },
     async (error: unknown) => {
       if (isRequestCanceled(error)) throw error
       const apiError = normalizeError(error)
-      if (axios.isAxiosError(error) && (apiError.status === 401 || apiError.code === 401)) {
-        await processUnauthorizedSession(error.config)
+      if (axios.isAxiosError(error) && isUnauthorizedError(apiError.code, apiError.status)) {
+        apiError.notificationHandled = await processUnauthorizedSession(error.config)
       }
       throw apiError
     }
@@ -213,23 +221,23 @@ export function initRequest(config: ApiClientConfig): AxiosInstance {
 }
 
 /** 原始实例保留完整 AxiosResponse，与 AxiosInstance 类型一致。 */
-export function getAxiosInstance(): AxiosInstance {
+export const getAxiosInstance = (): AxiosInstance => {
   if (!axiosInstance) {
     throw new Error('Request not initialized. Call initRequest() first.')
   }
   return axiosInstance
 }
 
-export async function requestRaw<T = unknown, D = unknown>(
+export const requestRaw = async <T = unknown, D = unknown>(
   config: ApiRequestConfig<D>
-): Promise<AxiosResponse<T, D>> {
+): Promise<AxiosResponse<T, D>> => {
   return getAxiosInstance().request<T, AxiosResponse<T, D>, D>(config)
 }
 
 /** T 表示后端 Result.data 的业务类型，返回值保留完整业务响应。 */
-export async function request<T = unknown, D = unknown>(
+export const request = async <T = unknown, D = unknown>(
   config: ApiRequestConfig<D>
-): Promise<ApiResponse<T>> {
+): Promise<ApiResponse<T>> => {
   const response = await requestRaw<unknown, D>(config)
   const data = response.data
   if (

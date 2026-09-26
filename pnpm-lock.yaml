@@ -121,6 +121,9 @@ importers:
       '@common-crm/types':
         specifier: workspace:*
         version: link:../../../packages/types
+      '@common-crm/utils':
+        specifier: workspace:*
+        version: link:../../../packages/utils
       element-plus:
         specifier: ^2.14.5
         version: 2.14.5(vue@3.5.42(typescript@6.0.3))
@@ -210,6 +213,9 @@ importers:
 
   crm_serve:
     dependencies:
+      '@common-crm/errors':
+        specifier: workspace:*
+        version: link:../packages/errors
       '@common-crm/types':
         specifier: workspace:*
         version: link:../packages/types
@@ -240,9 +246,15 @@ importers:
       class-validator:
         specifier: ^0.14.2
         version: 0.14.4
+      file-type:
+        specifier: ^22.1.1
+        version: 22.1.1(supports-color@8.1.1)
       ioredis:
         specifier: ^5.8.2
         version: 5.11.1(supports-color@8.1.1)
+      multer:
+        specifier: ^2.4.0
+        version: 2.4.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -268,6 +280,9 @@ importers:
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0
+      '@types/multer':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
@@ -307,6 +322,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@common-crm/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@common-crm/types':
         specifier: workspace:*
         version: link:../types
@@ -351,6 +369,9 @@ importers:
 
   packages/dev-tools:
     dependencies:
+      '@common-crm/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@common-crm/types':
         specifier: workspace:*
         version: link:../types
@@ -370,6 +391,12 @@ importers:
       vite:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)
+
+  packages/errors:
+    devDependencies:
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
 
   packages/router:
     dependencies:
@@ -400,6 +427,10 @@ importers:
         version: 6.0.3
 
   packages/utils:
+    dependencies:
+      '@common-crm/errors':
+        specifier: workspace:*
+        version: link:../errors
     devDependencies:
       element-plus:
         specifier: ^2.14.5
@@ -1685,6 +1716,9 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
+  '@types/multer@2.2.0':
+    resolution: {integrity: sha512-3U1troeqGV8Ntp7Q3klwf4zr23VEoqYVocYXaswm9+8z3O9UHDYAqLxjJ/h550iRADTjKdOdhhasXw6gD6kYtg==}
+
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
@@ -2886,6 +2920,10 @@ packages:
     resolution: {integrity: sha512-Ievi/yy8DS3ygGvT47PjSfdFoX+2isQueoYP1cntFW1JLYAuS4GD7NUPGg4zv2iZfV52uDyk5w5Z0TdpRS6Q1g==}
     engines: {node: '>=20'}
 
+  file-type@22.1.1:
+    resolution: {integrity: sha512-sEB0oStmeLGtpmSAD88RDNuLsvhv4iC3u0lE25CUvfCULvj49xoQ3l3K525Vn+ZzsZ6DOLajQCV6RmhwwhqiJg==}
+    engines: {node: '>=22'}
+
   finalhandler@2.1.1:
     resolution: {integrity: sha512-S8KoZgRZN+a5rNwqTxlZZePjT/4cnm0ROV70LedRHZ0p8u9fRID0hJUZQpkKLzro8LfmC8sx23bY6tVNxv8pQA==}
     engines: {node: '>= 18.0.0'}
@@ -3626,6 +3664,10 @@ packages:
 
   multer@2.2.0:
     resolution: {integrity: sha512-6rdyFg2kLrMh9Jee7/BMPuV9lEAd7lLW2YUpF9/YxR7njyoUwwQ0ZPh3TaIY50Sw6vlyD2HW3wGOkTS4P79xrQ==}
+    engines: {node: '>= 10.16.0'}
+
+  multer@2.4.0:
+    resolution: {integrity: sha512-7dqa0ZcFfzbefdTuIkzOSMvZWC0J7FLqBOjJUZvDCXShIURWKxAyTT1wHhnE5q19c7jOJf43IYYKjBmZVZmvhg==}
     engines: {node: '>= 10.16.0'}
 
   mute-stream@2.0.0:
@@ -5998,6 +6040,10 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
+  '@types/multer@2.2.0':
+    dependencies:
+      '@types/express': 5.0.6
+
   '@types/node@24.13.3':
     dependencies:
       undici-types: 7.18.2
@@ -7311,6 +7357,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  file-type@22.1.1(supports-color@8.1.1):
+    dependencies:
+      '@tokenizer/inflate': 0.4.1(supports-color@8.1.1)
+      strtok3: 10.3.5
+      token-types: 6.1.2
+      uint8array-extras: 1.5.0
+    transitivePeerDependencies:
+      - supports-color
+
   finalhandler@2.1.1(supports-color@8.1.1):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
@@ -8207,6 +8262,12 @@ snapshots:
       append-field: 1.0.0
       busboy: 1.6.0
       concat-stream: 2.0.0
+      type-is: 1.6.18
+
+  multer@2.4.0:
+    dependencies:
+      append-field: 1.0.0
+      busboy: 1.6.0
       type-is: 1.6.18
 
   mute-stream@2.0.0: {}

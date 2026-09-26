@@ -1,3 +1,4 @@
+import { notifySessionExpired } from '@common-crm/utils'
 import { initRequest } from '@common-crm/api'
 import type { Pinia } from 'pinia'
 import type { Router } from 'vue-router'
@@ -6,7 +7,7 @@ import { useAuthStore } from '../stores'
 /**
  * 初始化 API 客户端
  */
-export function initApiClient(pinia: Pinia, router: Router) {
+export const initApiClient = (pinia: Pinia, router: Router) => {
   const authStore = useAuthStore(pinia)
   initRequest({
     baseURL: import.meta.env?.VITE_API_BASE_URL ?? '/api',
@@ -14,6 +15,7 @@ export function initApiClient(pinia: Pinia, router: Router) {
     withCredentials: true,
     getAccessToken: () => authStore.accessToken,
     onUnauthorized: async () => {
+      notifySessionExpired()
       const currentRoute = router.currentRoute.value
       authStore.clearTokens()
       if (currentRoute.path !== '/login') {

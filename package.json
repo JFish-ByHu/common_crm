@@ -16,7 +16,7 @@
     "build:serve": "pnpm --filter @common-crm/serve build",
     "test": "pnpm --filter @common-crm/serve test",
     "test:router": "pnpm --filter @common-crm/router test",
-    "typecheck": "pnpm -r --filter @common-crm/types --filter @common-crm/router --filter @common-crm/components --filter @common-crm/utils --filter @common-crm/alpha --filter @common-crm/customer --filter @common-crm/system --filter @common-crm/serve typecheck",
+    "typecheck": "pnpm -r --filter @common-crm/errors --filter @common-crm/types --filter @common-crm/router --filter @common-crm/components --filter @common-crm/utils --filter @common-crm/alpha --filter @common-crm/customer --filter @common-crm/system --filter @common-crm/serve typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

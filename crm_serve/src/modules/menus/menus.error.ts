@@ -1,6 +1,9 @@
-import { HttpException } from '@nestjs/common'
-import { Result } from '../../common'
+import { BusinessError } from '../../common'
 
-export const rejectPermissionInput = (message: string, code = 400): never => {
-  throw new HttpException(new Result(code, null, message), code)
+export const rejectPermissionInput = (definition: {
+  code: number
+  httpStatus: number
+  msg: string
+}): never => {
+  throw new BusinessError(definition)
 }

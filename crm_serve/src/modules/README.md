@@ -34,7 +34,7 @@ modules/auth/
 - 根目录的 `*.module.ts`、`*.controller.ts`：模块装配、声明路由、接收 DTO、调用业务服务并返回响应。
 - `services/`：编排业务规则和事务边界，不直接编写 SQL 或 Prisma 查询。
 - `repositories/`：封装 Prisma 查询和持久化事务。
-- 根目录的 `*-result.presenter.ts`：将业务结果和业务错误转换为统一响应；出现多个相关实现时再建立 `presenters/`。
+- 根目录的 `*-result.presenter.ts`：包装成功结果，业务异常交由全局过滤器统一处理；出现多个相关实现时再建立 `presenters/`。
 - `tests/`：当前业务模块的测试，文件使用 `*.spec.ts` 命名，沿用现有 Jest 发现规则。
 - 根目录的 `types.ts`、`*.error.ts`：内部类型和业务错误。
 - 专用技术服务：封装 JWT、文件存储等有明确职责的技术能力。
@@ -119,6 +119,10 @@ modules/
 `authorization/` 负责全局鉴权、有效权限计算和带数据库版本的 Redis 缓存。
 `RolesModule -> MenusModule -> AuthorizationModule -> AuthModule`，无反向依赖。
 详见 [菜单管理](./menus/README.md) 与 [运行时授权](./authorization/README.md)。
+
+## 文件上传
+
+文件上传由平级 `files/` 模块提供 `POST /api/files/upload`，支持分类存储、内容类型校验和临时文件记录。详见 [文件上传说明](./files/README.md)。
 
 ## 在线状态
 
