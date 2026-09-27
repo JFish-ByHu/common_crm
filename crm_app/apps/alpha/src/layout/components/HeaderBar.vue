@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { CrmAvatar } from '@common-crm/components'
+import { loadAvatar } from '@common-crm/api'
+import type { CurrentUser } from '@common-crm/types/api'
 import {
   Bell,
   Close,
@@ -16,6 +19,7 @@ export interface BreadcrumbItem {
 }
 
 defineProps<{
+  user: CurrentUser | null
   breadcrumbItems: BreadcrumbItem[]
   isDark: boolean
 }>()
@@ -64,10 +68,14 @@ const emit = defineEmits<{
 
       <el-dropdown trigger="click">
         <div class="user-info">
-          <el-avatar :size="32" class="user-avatar">
-            <el-icon><User /></el-icon>
-          </el-avatar>
-          <span class="user-name">Admin</span>
+          <CrmAvatar
+            :src="user?.avatarUrl"
+            :load="loadAvatar"
+            :size="32"
+            class="user-avatar"
+            :alt="`${user?.username || '当前用户'}的头像`"
+          />
+          <span class="user-name">{{ user?.username || '用户' }}</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu>

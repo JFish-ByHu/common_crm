@@ -10,6 +10,7 @@ import { microAppModules } from './modules'
 export function getMicroApps(router: Router): RegistrableApp<MicroAppProps>[] {
   const eventBus = createMicroAppEventBus()
   const sharedProps: MicroAppProps = {
+    syncCurrentUser: user => useAuthStore().syncCurrentUser(user),
     appName: 'Common CRM',
     getAuthorization: async (force = false) => {
       const authorization = useAuthorizationStore()

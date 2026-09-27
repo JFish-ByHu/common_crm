@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { UserListItem } from '../types'
+import { CrmAvatar } from '@common-crm/components'
+import { loadAvatar } from '@common-crm/api'
 import UserOnlineStatus from './UserOnlineStatus.vue'
 
 defineProps<{ user: UserListItem | null }>()
@@ -15,13 +17,15 @@ const visible = defineModel<boolean>({ default: false })
     append-to-body
     destroy-on-close
   >
-    <el-descriptions
-      v-if="user"
-      :column="1"
-      :border="false"
-      :label-width="90"
-      class="user-details"
-    >
+    <el-descriptions v-if="user" :column="1" :border="false" :label-width="90" class="user-details">
+      <el-descriptions-item label="头像">
+        <CrmAvatar
+          :src="user.avatarUrl"
+          :load="loadAvatar"
+          :size="64"
+          :alt="`${user.username}的头像`"
+        />
+      </el-descriptions-item>
       <el-descriptions-item label="用户ID">{{ user.userId }}</el-descriptions-item>
       <el-descriptions-item label="用户名">{{ user.username }}</el-descriptions-item>
       <el-descriptions-item label="邮箱">{{ user.email || '-' }}</el-descriptions-item>

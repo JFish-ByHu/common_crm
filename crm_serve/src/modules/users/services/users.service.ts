@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { hash } from 'bcryptjs'
 import {
   createUserId,
+  createAvatarUrl,
   formatApiDateTime,
   parseBinaryStatus,
   resolvePagination
@@ -78,14 +79,18 @@ export class UsersService {
     }
   }
 
-  async create(command: CreateUserDto): Promise<UserListItem> {
-    const user = await this.usersRepository.create({
-      userId: createUserId(),
-      username: command.username,
-      email: command.email ?? null,
-      passwordHash: await hash(command.password, 12),
-      accountStatus: command.accountStatus ?? AccountStatus.ACTIVE
-    })
+  async create(command: CreateUserDto, actorId?: string): Promise<UserListItem> {
+    const user = await this.usersRepository.create(
+      {
+        userId: createUserId(),
+        avatarFileId: command.avatarFileId,
+        username: command.username,
+        email: command.email ?? null,
+        passwordHash: await hash(command.password, 12),
+        accountStatus: command.accountStatus ?? AccountStatus.ACTIVE
+      },
+      actorId
+    )
     return toUserListItem(user, 0)
   }
 
@@ -94,6 +99,7 @@ export class UsersService {
       command.username === undefined &&
       command.email === undefined &&
       command.password === undefined &&
+      command.avatarFileId === undefined &&
       command.accountStatus === undefined
     ) {
       throw new UsersError('INVALID_INPUT')
@@ -106,6 +112,7 @@ export class UsersService {
       userId,
       {
         username: command.username,
+        avatarFileId: command.avatarFileId,
         email: command.email,
         accountStatus: command.accountStatus,
         passwordHash: command.password === undefined ? undefined : await hash(command.password, 12)
@@ -178,6 +185,7 @@ const toUserListItem = (
   onlineStatus: UserOnlineStatus
 ): UserListItem => ({
   ...user,
+  avatarUrl: createAvatarUrl(user.avatarFileId),
   roles: user.roles.map(({ role }) => ({
     ...role,
     roleStatus: parseBinaryStatus(role.roleStatus)

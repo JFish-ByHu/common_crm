@@ -21,6 +21,7 @@ export const userFilterFields: FilterField<UserFilters>[] = [
 ]
 
 export const userColumns: TableColumn<UserListItem>[] = [
+  { prop: 'avatarUrl', label: '头像', width: 80, slot: 'avatar', showOverflowTooltip: false },
   { prop: 'userId', label: '用户ID', minWidth: 220 },
   { prop: 'username', label: '用户名', minWidth: 180 },
   { prop: 'roles', label: '所属角色', minWidth: 240, slot: 'roles', showOverflowTooltip: false },

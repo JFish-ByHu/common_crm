@@ -17,6 +17,13 @@ import { trimString } from '../../../common'
 import { normalizeEmail } from './transforms'
 
 export class CreateUserDto implements CreateUserRequest {
+  /** 上传后取得的头像文件 ID，保存时校验归属并绑定。 */
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  avatarFileId?: string | null
+
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()

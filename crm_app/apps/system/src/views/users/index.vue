@@ -2,7 +2,8 @@
 definePage({ key: 'system-users', title: '用户管理', defaultPath: '/system/users' })
 
 import { computed, ref } from 'vue'
-import { CrmFilterBar, CrmTable } from '@common-crm/components'
+import { CrmAvatar, CrmFilterBar, CrmTable } from '@common-crm/components'
+import { loadAvatar } from '@common-crm/api'
 import {
   UserDetails,
   UserEditor,
@@ -133,6 +134,9 @@ const executeUserAction = (key: string, row: UserListItem) => {
       @page-change="refreshUserList"
       @selection-change="selectUsers"
     >
+      <template #avatar="{ row }">
+        <CrmAvatar :src="row.avatarUrl" :load="loadAvatar" :alt="`${row.username}的头像`" />
+      </template>
       <template #status="{ row }">
         <el-switch
           :model-value="row.accountStatus"
@@ -171,12 +175,7 @@ const executeUserAction = (key: string, row: UserListItem) => {
       @save="saveUserRoles"
       @retry="loadUserRoles"
     />
-    <UserEditor
-      v-model="editorVisible"
-      :user="editingUser"
-      :saving="saving"
-      @save="saveUser"
-    />
+    <UserEditor v-model="editorVisible" :user="editingUser" :saving="saving" @save="saveUser" />
   </section>
 </template>
 

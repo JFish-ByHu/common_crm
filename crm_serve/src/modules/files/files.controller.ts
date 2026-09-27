@@ -1,15 +1,19 @@
 import {
   Body,
   Controller,
+  Get,
+  Query,
+  Res,
+  StreamableFile,
   HttpCode,
   Post,
   Req,
   UploadedFile,
   UseInterceptors
 } from '@nestjs/common'
-import type { Request } from 'express'
+import type { Request, Response } from 'express'
 import { Result } from '../../common'
-import { UploadFileDto } from './dto'
+import { UploadFileDto, PreviewFileDto } from './dto'
 import { FilesService } from './services'
 import { FileUploadInterceptor } from './file-upload.interceptor'
 
@@ -17,6 +21,23 @@ import { FileUploadInterceptor } from './file-upload.interceptor'
 @Controller('files')
 export class FilesController {
   constructor(private readonly files: FilesService) {}
+
+  /**
+   * GET /api/files/preview：鉴权读取头像，校验上传归属或用户列表访问权限。
+   * @param query fileId，禁止客户端传磁盘路径
+   * @returns 图片二进制；需携带 Bearer token，不提供公开静态目录
+   */
+  @Get('preview')
+  async previewAvatar(
+    @Query() query: PreviewFileDto,
+    @Req() request: Request & { user: { userId: string } },
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const file = await this.files.previewAvatar(query.fileId, request.user.userId)
+    response.setHeader('Cache-Control', 'private, no-store')
+    response.setHeader('X-Content-Type-Options', 'nosniff')
+    return new StreamableFile(file.content, { type: file.mimeType, disposition: 'inline' })
+  }
 
   /**
    * POST /api/files/upload：上传单个图片或文档，按分类和年月自动归档。

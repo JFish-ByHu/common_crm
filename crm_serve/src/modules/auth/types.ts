@@ -20,6 +20,7 @@ export interface AuthTokenPayload {
 
 /** 认证成功后写入请求上下文的当前用户。 */
 export interface AuthenticatedUser {
+  avatarFileId: string | null
   userId: string
   username: string
   email: string | null
@@ -55,6 +56,7 @@ export type ChangePasswordCommand = ChangePasswordRequest
 
 /** 用户仓储返回的认证字段。 */
 export interface UserRecord {
+  avatarFileId: string | null
   userId: string
   username: string
   passwordHash: string

@@ -19,6 +19,7 @@ export class AuthUserRepository {
       this.prismaService.crmUser.findUnique({
         where: { userId },
         select: {
+          avatarFileId: true,
           userId: true,
           username: true,
           password: true,
@@ -30,6 +31,7 @@ export class AuthUserRepository {
     return user
       ? {
           userId: user.userId,
+          avatarFileId: user.avatarFileId,
           username: user.username,
           passwordHash: user.password,
           email: user.email,
@@ -49,6 +51,7 @@ export class AuthUserRepository {
       this.prismaService.crmUser.findUnique({
         where: { username },
         select: {
+          avatarFileId: true,
           userId: true,
           username: true,
           password: true,
@@ -60,6 +63,7 @@ export class AuthUserRepository {
     return user
       ? {
           userId: user.userId,
+          avatarFileId: user.avatarFileId,
           username: user.username,
           passwordHash: user.password,
           email: user.email,

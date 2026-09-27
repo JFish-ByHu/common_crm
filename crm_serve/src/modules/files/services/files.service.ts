@@ -7,6 +7,8 @@ import { FilesRepository } from '../repositories'
 import { rejectFileUpload } from '../files.error'
 import { FileValidationService } from './file-validation.service'
 import { LocalStorageService } from './local-storage.service'
+import { AuthorizationService } from '../../authorization'
+import { AVATAR_TEMPORARY_TTL_MS } from '../types'
 
 @Injectable()
 export class FilesService {
@@ -15,8 +17,37 @@ export class FilesService {
   constructor(
     private readonly repository: FilesRepository,
     private readonly storage: LocalStorageService,
-    private readonly validation: FileValidationService
+    private readonly validation: FileValidationService,
+    private readonly authorization: AuthorizationService
   ) {}
+
+  /** 仅预览头像：本人头像、自己未过期的上传，或具备用户列表访问权限。 */
+  async previewAvatar(fileId: string, actorId: string) {
+    const file = await this.repository.findAvatar(fileId)
+    if (
+      !file ||
+      file.category !== 'avatar' ||
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimeType)
+    )
+      return rejectFileUpload(FileErrors.FILE_NOT_FOUND)
+    if (file.status === 'TEMPORARY') {
+      if (
+        file.uploadedBy !== actorId ||
+        file.updateTime <= BigInt(Date.now() - AVATAR_TEMPORARY_TTL_MS)
+      )
+        return rejectFileUpload(FileErrors.FILE_NOT_FOUND)
+    } else if (file.status === 'ATTACHED' && file.avatarUser) {
+      if (file.avatarUser.userId !== actorId)
+        await this.authorization.assertAllowed(actorId, 'GET', '/users/list')
+    } else return rejectFileUpload(FileErrors.FILE_NOT_FOUND)
+    try {
+      return { content: await this.storage.readFile(file.storageKey), mimeType: file.mimeType }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+        return rejectFileUpload(FileErrors.FILE_NOT_FOUND)
+      throw error
+    }
+  }
 
   async uploadFile(
     file: Express.Multer.File | undefined,

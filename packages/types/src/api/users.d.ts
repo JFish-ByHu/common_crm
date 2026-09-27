@@ -19,6 +19,9 @@ export interface UserSelectItem {
 }
 
 export interface UserListItem extends UserSelectItem {
+  avatarFileId: string | null
+  /** 相对 API baseURL 的鉴权预览地址，需携带 access token 获取图片。 */
+  avatarUrl: string | null
   /** 已分配角色，包含停用角色。 */
   roles: RoleSelectItem[]
   email: string | null
@@ -42,6 +45,7 @@ export interface QueryUserSelectListRequest extends OptionalPageRequest {
 export type UserListResponse<T = UserListItem> = PageResponse<T>
 
 export interface CreateUserRequest {
+  avatarFileId?: string | null
   username: string
   password: string
   email?: string | null
@@ -49,6 +53,8 @@ export interface CreateUserRequest {
 }
 
 export interface UpdateUserRequest {
+  /** 不传保持原头像；null 移除；文件 ID 替换头像。 */
+  avatarFileId?: string | null
   userId: string
   username?: string
   email?: string | null

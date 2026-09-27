@@ -13,6 +13,8 @@ export const PUBLIC_ENDPOINTS = new Set([
   'POST /auth/logout'
 ])
 export const SESSION_ENDPOINTS = new Set([
+  // 会话校验后，由文件服务按实际头像归属和用户列表权限进一步授权。
+  'GET /files/preview',
   'GET /auth/me',
   'POST /auth/heartbeat',
   'PATCH /auth/password',

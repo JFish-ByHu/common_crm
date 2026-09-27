@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { AuthModule } from '../auth'
+import { FilesModule } from '../files'
 import { PresenceModule } from '../presence'
 import { RolesModule } from '../roles'
 import { AuthorizationModule } from '../authorization'
@@ -10,7 +11,7 @@ import { UsersService } from './services'
 
 /** 平台用户管理，复用认证模块的鉴权、会话以及在线状态模块的能力。 */
 @Module({
-  imports: [AuthModule, PresenceModule, RolesModule, AuthorizationModule],
+  imports: [AuthModule, PresenceModule, RolesModule, AuthorizationModule, FilesModule],
   controllers: [UsersController],
   providers: [UsersRepository, UsersService, UsersResultPresenter],
   exports: [UsersService]

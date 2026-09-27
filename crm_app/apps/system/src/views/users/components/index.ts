@@ -1,5 +1,6 @@
 export { default as UserDetails } from './UserDetails.vue'
 export { default as UserEditor } from './UserEditor.vue'
+export { default as UserAvatarUpload } from './UserAvatarUpload.vue'
 export { default as UserToolbar } from './UserToolbar.vue'
 export { default as UserOnlineStatus } from './UserOnlineStatus.vue'
 export { default as UserRoleEditor } from './UserRoleEditor.vue'

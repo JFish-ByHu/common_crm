@@ -12,6 +12,8 @@ model CrmUser {
   username      String           @unique(map: "uk_crm_users_username") @db.VarChar(64)
   password      String           @db.VarChar(255)
   email         String?          @unique(map: "uk_crm_users_email") @db.VarChar(255)
+  avatarFileId  String?          @unique(map: "uk_crm_users_avatar_file") @db.VarChar(64)
+  avatar        CrmFile?         @relation(fields: [avatarFileId], references: [fileId], onDelete: Restrict, map: "fk_crm_users_avatar_file")
   createTime    BigInt           @db.UnsignedBigInt
   updateTime    BigInt           @db.UnsignedBigInt
   accountStatus Int              @default(1) @db.UnsignedTinyInt
@@ -158,17 +160,18 @@ model CrmPermissionAudit {
 }
 
 model CrmFile {
-  fileId       String @id @db.VarChar(64)
-  category     String @db.VarChar(16)
-  originalName String @db.VarChar(255)
-  storageKey   String @unique @db.VarChar(255)
-  mimeType     String @db.VarChar(128)
-  extension    String @db.VarChar(16)
-  size         Int    @db.UnsignedInt
-  uploadedBy   String @db.VarChar(64)
-  status       String @default("TEMPORARY") @db.VarChar(16)
-  createTime   BigInt @db.UnsignedBigInt
-  updateTime   BigInt @db.UnsignedBigInt
+  avatarUser   CrmUser?
+  fileId       String   @id @db.VarChar(64)
+  category     String   @db.VarChar(16)
+  originalName String   @db.VarChar(255)
+  storageKey   String   @unique @db.VarChar(255)
+  mimeType     String   @db.VarChar(128)
+  extension    String   @db.VarChar(16)
+  size         Int      @db.UnsignedInt
+  uploadedBy   String   @db.VarChar(64)
+  status       String   @default("TEMPORARY") @db.VarChar(16)
+  createTime   BigInt   @db.UnsignedBigInt
+  updateTime   BigInt   @db.UnsignedBigInt
 
   @@index([uploadedBy, createTime])
   @@index([status, createTime])

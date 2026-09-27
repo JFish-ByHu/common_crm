@@ -70,18 +70,18 @@ export class UsersController {
 
   /**
    * POST /api/users/create：生成 crm_user_ 前缀的用户 ID，并使用 bcrypt 摘要保存密码。
-   * @param command 用户名、初始密码及可选邮箱、账号状态
+   * @param command 用户名、初始密码及可选邮箱、账号状态、avatarFileId
    * @returns 新用户的公开资料
    */
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  create(@Body() command: CreateUserDto) {
-    return this.presenter.present(() => this.usersService.create(command))
+  create(@Body() command: CreateUserDto, @Req() request: { user: { userId: string } }) {
+    return this.presenter.present(() => this.usersService.create(command, request.user.userId))
   }
 
   /**
    * PATCH /api/users/update：原子更新资料和账号状态，重设密码或停用时撤销全部会话。
-   * @param command userId 必传；用户名、邮箱、新密码或 accountStatus 至少传入一项
+   * @param command userId 必传；资料至少一项；avatarFileId 不传保留、null 移除、ID 替换
    * @returns 编辑后的公开资料
    */
   @Patch('update')
@@ -116,7 +116,7 @@ export class UsersController {
   /**
    * DELETE /api/users/delete：物理删除单个用户及关联登录会话。
    * @param command 待删除用户的 userId
-   * @returns deletedCount 为 1；用户不存在时返回业务码 404
+   * @returns deletedCount 为 1；用户不存在时返回 HTTP 404、业务码 120001
    */
   @Delete('delete')
   delete(@Body() command: UserIdDto) {

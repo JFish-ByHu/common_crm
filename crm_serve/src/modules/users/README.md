@@ -40,7 +40,7 @@
 用户列表额外支持 `keyword` 和 `accountStatus`。`keyword` 去除首尾空格后，对
 `userId`、`username`、`email` 按 OR 模糊查询；`accountStatus` 与关键字条件按 AND
 组合。空关键字不添加检索条件。返回字段为 `userId`、`username`、`email`、
-`accountStatus`、`onlineStatus`、`createTime`、`updateTime`、`roles`，不会查询或返回密码。
+`accountStatus`、`onlineStatus`、`createTime`、`updateTime`、`roles`、`avatarFileId`、`avatarUrl`，不会查询或返回密码。
 `roles` 包含已分配角色的 `roleId`、`roleName`、`roleCode`、`roleStatus`、`isSystem`，包含停用角色。
 角色通过关联查询随列表一起返回，前端不逐行请求角色接口。
 
@@ -149,7 +149,7 @@ Content-Type: application/json
 
 ## 编辑用户
 
-请求体必传 `userId`，可更新 `username`、`email`、`password`、`accountStatus`，至少传入一项，校验规则与创建相同。
+请求体必传 `userId`，可更新 `username`、`email`、`password`、`accountStatus`、`avatarFileId`，至少传入一项，校验规则与创建相同。
 字段省略表示不修改；`email` 传空字符串或 `null` 表示清空邮箱。
 `accountStatus` 只接受数字 `0` 或 `1`，可与用户资料一起保存。
 传入 `password` 表示管理端重设密码；重设密码或停用账号时，资料、账号状态的更新与
@@ -170,6 +170,21 @@ Content-Type: application/json
 
 响应 `data` 为编辑后的公开资料。编辑弹窗使用此接口一次保存资料和状态；
 列表中的状态开关继续使用下面的独立接口。
+
+## 用户头像
+
+创建、编辑支持可选 `avatarFileId`。先通过 `POST /api/files/upload`、`category=avatar` 上传，
+再将响应的 `fileId` 随用户表单保存。上传者是操作管理员，头像所属用户在保存时确定。
+
+| 提交方式                          | 结果                                                   |
+| --------------------------------- | ------------------------------------------------------ |
+| 不传 `avatarFileId`               | 创建时无头像，编辑时保持原头像                         |
+| `avatarFileId: null`              | 移除头像                                               |
+| `avatarFileId: "crm_file_<UUID>"` | 设置或替换头像，必须为当前操作者上传且未过期的临时头像 |
+
+头像关联与用户资料在同一事务内提交。取消编辑或保存失败保留原头像，未关联头像保留 24 小时后分批清理。
+读取地址 `avatarUrl` 需通过鉴权请求获取；详见 [文件上传及预览](../files/README.md)。
+普通角色还需由管理员在菜单管理中授权 `POST /files/upload`，系统管理员直接可用。
 
 ## 修改账号状态
 

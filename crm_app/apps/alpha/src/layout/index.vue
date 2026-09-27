@@ -5,11 +5,12 @@ import { Message, notifyRequestError } from '@common-crm/utils'
 import { useAuthStore, useThemeStore } from '../stores'
 import { logout as revokeSession } from '../services'
 import { HeaderBar, MainContent, Sidebar } from './components'
-import { useLayoutNavigation, usePresenceHeartbeat } from './hooks'
+import { useCurrentUser, useLayoutNavigation, usePresenceHeartbeat } from './hooks'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+useCurrentUser()
 
 const collapsed = ref(false)
 const { menuItems, activeMenu, breadcrumbItems } = useLayoutNavigation()
@@ -68,6 +69,7 @@ const finishLayoutTransition = (event: TransitionEvent) => {
       @transitionend="finishLayoutTransition"
     >
       <HeaderBar
+        :user="authStore.currentUser"
         :breadcrumb-items="breadcrumbItems"
         :is-dark="themeStore.isDark"
         @logout="logout"

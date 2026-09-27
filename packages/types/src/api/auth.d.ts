@@ -21,6 +21,8 @@ export interface RefreshTokenRequest {
 }
 
 export interface CurrentUser {
+  avatarFileId: string | null
+  avatarUrl: string | null
   userId: string
   username: string
   email: string | null

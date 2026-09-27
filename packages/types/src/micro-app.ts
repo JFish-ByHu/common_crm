@@ -1,4 +1,4 @@
-import type { CurrentAuthorization } from './api/index.js'
+import type { CurrentAuthorization, CurrentUser } from './api/index.js'
 
 export type ThemeMode = 'light' | 'dark'
 
@@ -25,6 +25,8 @@ export interface MicroAppProps {
   appName?: string
   container?: Element
   getAuthState?: () => SharedAuthState
+  /** 用户编辑成功后同步基座已登录用户的公开资料；不修改认证令牌。 */
+  syncCurrentUser?: (user: CurrentUser) => void
   /** Share Alpha's session-scoped snapshot; force refresh after permission mutations. */
   getAuthorization?: (force?: boolean) => Promise<CurrentAuthorization>
   getThemeState?: () => SharedThemeState

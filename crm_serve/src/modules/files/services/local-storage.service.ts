@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { mkdir, mkdtemp, rename, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rename, rm } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 @Injectable()
@@ -26,6 +26,10 @@ export class LocalStorageService {
 
   async removeFile(storageKey: string): Promise<void> {
     await rm(this.resolveStoragePath(storageKey), { force: true })
+  }
+
+  readFile(storageKey: string): Promise<Buffer> {
+    return readFile(this.resolveStoragePath(storageKey))
   }
 
   /** 仅清理本次请求创建的暂存目录，不覆盖原请求的错误或成功结果。 */

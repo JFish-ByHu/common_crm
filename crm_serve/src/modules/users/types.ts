@@ -15,6 +15,7 @@ export type AccountStatusValue = UserAccountStatus
 
 /** 用户仓储使用的公开字段，时间保持数据库毫秒时间戳类型。 */
 export interface StoredUserListItem {
+  avatarFileId: string | null
   roles: { role: Omit<RoleSelectItem, 'roleStatus'> & { roleStatus: number } }[]
   userId: string
   username: string
@@ -38,6 +39,7 @@ export interface UserSearch {
 }
 
 export interface CreateUserInput {
+  avatarFileId?: string | null
   userId: string
   username: string
   email: string | null
@@ -46,6 +48,7 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
+  avatarFileId?: string | null
   username?: string
   email?: string | null
   passwordHash?: string

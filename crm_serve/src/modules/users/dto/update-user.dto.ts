@@ -19,6 +19,13 @@ import { UserIdDto } from './user-id.dto'
 
 /** 仅更新传入的字段，资料和账号状态在同一事务中保存。 */
 export class UpdateUserDto extends UserIdDto implements UpdateUserRequest {
+  /** 不传不修改，null 移除；新文件必须是当前操作者上传的临时头像。 */
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  avatarFileId?: string | null
+
   @ValidateIf((_object, value) => value !== undefined)
   @Transform(trimString)
   @IsString()

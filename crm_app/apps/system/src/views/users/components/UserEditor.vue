@@ -3,15 +3,23 @@ import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Check, Close } from '@element-plus/icons-vue'
 import type { FormInstance, FormItemRule, FormRules } from 'element-plus'
 import type { UserFormValues, UserListItem } from '../types'
+import UserAvatarUpload from './UserAvatarUpload.vue'
 
 const props = defineProps<{ user: UserListItem | null; saving: boolean }>()
 const visible = defineModel<boolean>({ default: false })
 const emit = defineEmits<{ save: [values: UserFormValues] }>()
 const formRef = ref<FormInstance>()
 const validating = ref(false)
+const avatarUploading = ref(false)
 const editing = computed(() => props.user !== null)
 const busy = computed(() => props.saving || validating.value)
-const form = reactive<UserFormValues>({ username: '', email: '', password: '', accountStatus: 1 })
+const form = reactive<UserFormValues>({
+  username: '',
+  email: '',
+  password: '',
+  accountStatus: 1,
+  avatarFileId: null
+})
 
 const validateUserPassword: FormItemRule['validator'] = (_rule, value: string, callback) => {
   if (!value && editing.value) return callback()
@@ -40,6 +48,7 @@ watch(visible, async value => {
     username: props.user?.username ?? '',
     email: props.user?.email ?? '',
     password: '',
+    avatarFileId: props.user?.avatarFileId ?? null,
     accountStatus: props.user?.accountStatus ?? 1
   })
   await nextTick()
@@ -47,7 +56,7 @@ watch(visible, async value => {
 })
 
 const submitUserForm = async () => {
-  if (busy.value || !formRef.value) return
+  if (busy.value || avatarUploading.value || !formRef.value) return
   validating.value = true
   try {
     const valid = await formRef.value.validate().catch(() => false)
@@ -85,6 +94,15 @@ const clearUserPassword = () => {
       label-position="top"
       @submit.prevent="submitUserForm"
     >
+      <el-form-item label="头像" prop="avatarFileId">
+        <UserAvatarUpload
+          v-model="form.avatarFileId"
+          :initial-url="user?.avatarUrl ?? null"
+          :disabled="busy"
+          :active="visible"
+          @uploading="avatarUploading = $event"
+        />
+      </el-form-item>
       <el-form-item label="用户名" prop="username">
         <el-input v-model.trim="form.username" maxlength="64" autocomplete="off" />
       </el-form-item>
@@ -111,16 +129,18 @@ const clearUserPassword = () => {
           class="user-status-switch"
           :aria-label="`账号状态：${form.accountStatus === 1 ? '正常' : '停用'}`"
         />
-        <p
-          v-if="user?.accountStatus === 1 && form.accountStatus === 0"
-          class="user-status-hint"
-        >
+        <p v-if="user?.accountStatus === 1 && form.accountStatus === 0" class="user-status-hint">
           保存后将停用账号，并使该用户的登录会话失效。
         </p>
       </el-form-item>
       <div class="user-editor-actions">
         <el-button :icon="Close" :disabled="busy" @click="closeUserEditor">取消</el-button>
-        <el-button type="primary" native-type="submit" :icon="Check" :loading="busy"
+        <el-button
+          type="primary"
+          native-type="submit"
+          :icon="Check"
+          :loading="busy"
+          :disabled="avatarUploading"
           >保存</el-button
         >
       </div>

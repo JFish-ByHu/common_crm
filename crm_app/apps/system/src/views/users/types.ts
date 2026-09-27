@@ -15,6 +15,7 @@ export interface UserFilters {
 }
 
 export interface UserFormValues {
+  avatarFileId: string | null
   username: string
   email: string
   password: string

@@ -78,4 +78,14 @@ export const FileErrors: Readonly<{
         httpStatus: 400;
         msg: "文件上传中断或请求格式不正确";
     }>;
+    AVATAR_UNAVAILABLE: Readonly<{
+        code: 150016;
+        httpStatus: 422;
+        msg: "头像文件不可用、已过期或无权使用，请重新上传";
+    }>;
+    FILE_NOT_FOUND: Readonly<{
+        code: 150017;
+        httpStatus: 404;
+        msg: "文件不存在或已失效";
+    }>;
 }>;

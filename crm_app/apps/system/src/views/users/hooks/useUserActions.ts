@@ -11,6 +11,7 @@ import {
 import { Message, notifyRequestError } from '@common-crm/utils'
 import type { UserFormValues, UserListItem } from '../types'
 import { getUserErrorMessage } from '../utils'
+import { getMicroAppProps } from '../../../micro-app'
 
 export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
   const editorVisible = ref(false)
@@ -43,18 +44,23 @@ export const useUserActions = (refreshUserList: () => Promise<boolean>) => {
     try {
       const profile = { username: values.username.trim(), email: values.email.trim() || null }
       if (user) {
-        await updateUser({
+        const result = await updateUser({
           ...profile,
           userId: user.userId,
+          ...(values.avatarFileId !== user.avatarFileId
+            ? { avatarFileId: values.avatarFileId }
+            : {}),
           ...(values.accountStatus !== user.accountStatus
             ? { accountStatus: values.accountStatus }
             : {}),
           ...(values.password ? { password: values.password } : {})
         })
+        if (result.data) getMicroAppProps().syncCurrentUser?.(result.data)
       } else {
         await createUser({
           ...profile,
           password: values.password,
+          avatarFileId: values.avatarFileId,
           accountStatus: values.accountStatus
         })
       }

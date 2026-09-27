@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { createAvatarUrl } from '../../../common'
 import { compare, hash } from 'bcryptjs'
 import type { HeartbeatResponse } from '@common-crm/types/api'
 import { AuthApplicationError } from '../auth.error'
@@ -101,7 +102,13 @@ export class AuthService {
    * @returns 可返回给客户端的用户资料
    */
   getCurrentUser(user: AuthenticatedUser): AuthUserProfile {
-    return { userId: user.userId, username: user.username, email: user.email }
+    return {
+      userId: user.userId,
+      username: user.username,
+      email: user.email,
+      avatarFileId: user.avatarFileId,
+      avatarUrl: createAvatarUrl(user.avatarFileId)
+    }
   }
 
   /** 心跳只更新 Redis，不修改数据库资料时间或延长认证有效期。 */
@@ -176,7 +183,8 @@ export class AuthService {
       userId: user.userId,
       username: user.username,
       email: user.email,
-      sessionId: session.sessionId
+      sessionId: session.sessionId,
+      avatarFileId: user.avatarFileId
     }
   }
 

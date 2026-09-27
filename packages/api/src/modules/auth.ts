@@ -62,8 +62,10 @@ export const refreshTokens = (data: RefreshTokenRequest): Promise<ApiResponse<Au
 /**
  * 获取当前登录用户
  */
-export const getCurrentUser = (): Promise<ApiResponse<CurrentUser>> => {
-  return request<CurrentUser>({ url: '/auth/me', method: 'get' })
+export const getCurrentUser = (
+  config: Pick<ApiRequestConfig, 'signal' | 'showProgress'> = {}
+): Promise<ApiResponse<CurrentUser>> => {
+  return request<CurrentUser>({ ...config, url: '/auth/me', method: 'get' })
 }
 
 /**

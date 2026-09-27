@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { CurrentUser } from '@common-crm/types/api'
 
 const ACCESS_TOKEN_KEY = 'crm-access-token'
 const REFRESH_TOKEN_KEY = 'crm-refresh-token'
@@ -7,6 +8,13 @@ const REMEMBERED_USERNAME_KEY = 'crm-remembered-username'
 const REMEMBERED_PASSWORD_KEY = 'crm-remembered-password'
 
 export const useAuthStore = defineStore('auth', () => {
+  const currentUser = ref<CurrentUser | null>(null)
+  const setCurrentUser = (user: CurrentUser | null) => {
+    currentUser.value = user
+  }
+  const syncCurrentUser = (user: CurrentUser) => {
+    if (currentUser.value?.userId === user.userId) currentUser.value = user
+  }
   const accessToken = ref<string | null>(localStorage.getItem(ACCESS_TOKEN_KEY))
   const refreshToken = ref<string | null>(localStorage.getItem(REFRESH_TOKEN_KEY))
   const rememberedUsername = ref<string | null>(localStorage.getItem(REMEMBERED_USERNAME_KEY))
@@ -15,6 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!accessToken.value)
 
   const setTokens = (access: string, refresh: string) => {
+    if (accessToken.value !== access) currentUser.value = null
     accessToken.value = access
     refreshToken.value = refresh
     localStorage.setItem(ACCESS_TOKEN_KEY, access)
@@ -22,6 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const clearTokens = () => {
+    currentUser.value = null
     accessToken.value = null
     refreshToken.value = null
     localStorage.removeItem(ACCESS_TOKEN_KEY)
@@ -29,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const syncTokensFromStorage = () => {
+    if (accessToken.value !== localStorage.getItem(ACCESS_TOKEN_KEY)) currentUser.value = null
     accessToken.value = localStorage.getItem(ACCESS_TOKEN_KEY)
     refreshToken.value = localStorage.getItem(REFRESH_TOKEN_KEY)
   }
@@ -53,6 +64,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
+    currentUser,
+    setCurrentUser,
+    syncCurrentUser,
     accessToken,
     refreshToken,
     rememberedUsername,

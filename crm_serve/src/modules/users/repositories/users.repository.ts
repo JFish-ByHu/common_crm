@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { UserErrors } from '@common-crm/errors'
+import { FileErrors, UserErrors } from '@common-crm/errors'
 import { Prisma } from '@prisma/client'
 import { currentTimestamp, BusinessError } from '../../../common'
 import { PrismaService } from '../../../database'
 import { UsersError } from '../users.error'
+import { FilesRepository } from '../../files'
 import {
   AccountStatus,
   type AccountStatusValue,
@@ -16,6 +17,7 @@ import {
 } from '../types'
 
 const userSelect = {
+  avatarFileId: true,
   userId: true,
   username: true,
   email: true,
@@ -40,7 +42,10 @@ const optionSelect = {
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly files: FilesRepository
+  ) {}
 
   findAccountsForPresence(userIds: string[]) {
     return this.prisma.readWithRetry(() =>
@@ -61,34 +66,47 @@ export class UsersRepository {
     return this.query(search, optionSelect)
   }
 
-  create(input: CreateUserInput): Promise<StoredUserListItem> {
-    return this.write(() => {
-      const now = currentTimestamp()
-      return this.prisma.crmUser.create({
-        data: {
-          userId: input.userId,
-          username: input.username,
-          email: input.email,
-          password: input.passwordHash,
-          accountStatus: input.accountStatus,
-          createTime: now,
-          updateTime: now
-        },
-        select: userSelect
+  create(input: CreateUserInput, actorId?: string): Promise<StoredUserListItem> {
+    return this.write(() =>
+      this.prisma.$transaction(async transaction => {
+        const now = currentTimestamp()
+        if (input.avatarFileId)
+          await this.files.attachAvatar(transaction, input.avatarFileId, actorId)
+        return transaction.crmUser.create({
+          data: {
+            avatarFileId: input.avatarFileId ?? null,
+            userId: input.userId,
+            username: input.username,
+            email: input.email,
+            password: input.passwordHash,
+            accountStatus: input.accountStatus,
+            createTime: now,
+            updateTime: now
+          },
+          select: userSelect
+        })
       })
-    })
+    )
   }
 
   /** 资料、账号状态与会话撤销使用同一事务，防止部分更新。 */
   update(userId: string, input: UpdateUserInput, actorId?: string): Promise<StoredUserListItem> {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
+        // 串行化同一用户的头像替换，防止并发更新遗留未释放的文件。
+        const previous = await transaction.$queryRaw<{ avatarFileId: string | null }[]>`
+          SELECT avatarFileId FROM crm_users WHERE userId = ${userId} FOR UPDATE`
+        if (!previous.length) throw new UsersError('USER_NOT_FOUND')
+        const oldAvatar = previous[0].avatarFileId
+        if (input.avatarFileId && input.avatarFileId !== oldAvatar)
+          await this.files.attachAvatar(transaction, input.avatarFileId, actorId)
         if (actorId !== userId || input.accountStatus === AccountStatus.DISABLED)
           await this.assertNotSystemUser(transaction, [userId])
         const now = currentTimestamp()
         const user = await transaction.crmUser.update({
           where: { userId },
           data: {
+            avatarFileId: input.avatarFileId,
             username: input.username,
             email: input.email,
             password: input.passwordHash,
@@ -103,6 +121,8 @@ export class UsersRepository {
             data: { revokedAt: now, updateTime: now }
           })
         }
+        if (input.avatarFileId !== undefined && input.avatarFileId !== oldAvatar)
+          await this.files.releaseAvatar(transaction, oldAvatar)
         return user
       })
     )
@@ -141,10 +161,13 @@ export class UsersRepository {
     return this.write(() =>
       this.prisma.$transaction(async transaction => {
         await this.assertNotSystemUser(transaction, userIds)
+        const avatars = await transaction.$queryRaw<{ avatarFileId: string | null }[]>`
+          SELECT avatarFileId FROM crm_users WHERE userId IN (${Prisma.join(userIds)}) ORDER BY userId FOR UPDATE`
         const { count } = await transaction.crmUser.deleteMany({
           where: { userId: { in: userIds } }
         })
         if (count !== userIds.length) throw new UsersError('USER_NOT_FOUND')
+        for (const user of avatars) await this.files.releaseAvatar(transaction, user.avatarFileId)
         return { deletedCount: count }
       })
     )
@@ -207,6 +230,7 @@ export class UsersRepository {
         if (error.code === 'P2002') {
           const target = error.meta?.target
           const constraint = Array.isArray(target) ? target.join(',') : String(target ?? '')
+          if (constraint.includes('avatar')) throw new BusinessError(FileErrors.AVATAR_UNAVAILABLE)
           if (constraint.includes('username')) throw new UsersError('USERNAME_EXISTS')
           if (constraint.includes('email')) throw new UsersError('EMAIL_EXISTS')
           throw new UsersError('USER_CONFLICT')
