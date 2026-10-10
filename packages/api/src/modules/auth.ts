@@ -1,6 +1,3 @@
-import type { ApiRequestConfig, ApiResponse } from '../types'
-import { request } from '../core'
-
 import type {
   HeartbeatResponse,
   LogoutRequest,
@@ -11,6 +8,9 @@ import type {
   CurrentUser,
   ChangePasswordRequest
 } from '@common-crm/types/api'
+import { request } from '../core'
+import type { ApiQueryConfig, ApiRequestConfig, ApiResponse } from '../types'
+
 export type {
   LoginRequest,
   AuthTokens,
@@ -35,58 +35,45 @@ export const sendHeartbeat = (
     showProgress: false
   })
 
-/**
- * 用户登录
- */
-export const login = (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-  return request<LoginResponse, LoginRequest>({
+/** 用户登录。 */
+export const login = (data: LoginRequest): Promise<ApiResponse<LoginResponse>> =>
+  request<LoginResponse, LoginRequest>({
     url: '/auth/login',
     method: 'post',
     data,
     requiresAuth: false
   })
-}
 
-/**
- * 使用 refresh token 轮换访问令牌和刷新令牌
- */
-export const refreshTokens = (data: RefreshTokenRequest): Promise<ApiResponse<AuthTokens>> => {
-  return request<AuthTokens, RefreshTokenRequest>({
+/** 使用 refresh token 轮换访问令牌和刷新令牌。 */
+export const refreshTokens = (data: RefreshTokenRequest): Promise<ApiResponse<AuthTokens>> =>
+  request<AuthTokens, RefreshTokenRequest>({
     url: '/auth/refresh',
     method: 'post',
     data,
     requiresAuth: false
   })
-}
 
-/**
- * 获取当前登录用户
- */
-export const getCurrentUser = (
-  config: Pick<ApiRequestConfig, 'signal' | 'showProgress'> = {}
-): Promise<ApiResponse<CurrentUser>> => {
-  return request<CurrentUser>({ ...config, url: '/auth/me', method: 'get' })
-}
+/** 获取当前登录用户。 */
+export const getCurrentUser = (config: ApiQueryConfig = {}): Promise<ApiResponse<CurrentUser>> =>
+  request<CurrentUser>({
+    ...config,
+    url: '/auth/me',
+    method: 'get'
+  })
 
-/**
- * 撤销当前 refresh session
- */
-export const logout = (data: LogoutRequest): Promise<ApiResponse<null>> => {
-  return request<null, LogoutRequest>({
+/** 撤销当前 refresh session。 */
+export const logout = (data: LogoutRequest): Promise<ApiResponse<null>> =>
+  request<null, LogoutRequest>({
     url: '/auth/logout',
     method: 'post',
     data,
     requiresAuth: false
   })
-}
 
-/**
- * 修改当前用户密码，成功后服务端会撤销该用户的所有会话
- */
-export const changePassword = (data: ChangePasswordRequest): Promise<ApiResponse<null>> => {
-  return request<null, ChangePasswordRequest>({
+/** 修改当前用户密码，成功后服务端会撤销该用户的所有会话。 */
+export const changePassword = (data: ChangePasswordRequest): Promise<ApiResponse<null>> =>
+  request<null, ChangePasswordRequest>({
     url: '/auth/password',
     method: 'patch',
     data
   })
-}

@@ -5,6 +5,7 @@ export * from './core'
 export type {
   ApiClientConfig,
   ApiRequestConfig,
+  ApiQueryConfig,
   ApiErrorKind,
   ApiResponse,
   PageRequest,

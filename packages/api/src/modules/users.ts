@@ -1,6 +1,3 @@
-import { request } from '../core'
-import type { ApiRequestConfig, ApiResponse } from '../types'
-
 import type {
   UserPresenceItem,
   UserSelectItem,
@@ -17,6 +14,9 @@ import type {
   DeleteUsersResponse,
   LogoutUserResponse
 } from '@common-crm/types/api'
+import { request } from '../core'
+import type { ApiQueryConfig, ApiRequestConfig, ApiResponse } from '../types'
+
 export type {
   UserAccountStatus,
   UserOnlineStatus,
@@ -36,10 +36,11 @@ export type {
   LogoutUserResponse
 } from '@common-crm/types/api'
 
-type UserQueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
-
 /** 按需查询指定用户的有效菜单、按钮权限及角色来源。 */
-export const queryUserPermissions = (userId: string, config: UserQueryConfig = {}) =>
+export const queryUserPermissions = (
+  userId: string,
+  config: ApiQueryConfig = {}
+): Promise<ApiResponse<UserPermissionsResponse>> =>
   request<UserPermissionsResponse>({
     ...config,
     url: '/users/permissions',
@@ -64,14 +65,19 @@ export const queryUsersOnlineStatus = (
 /** 查询用户列表；省略 page 和 pageSize 时返回全部匹配用户。 */
 export const queryUserList = (
   params: QueryUserListRequest = {},
-  config: UserQueryConfig = {}
+  config: ApiQueryConfig = {}
 ): Promise<ApiResponse<UserListResponse>> =>
-  request<UserListResponse>({ ...config, url: '/users/list', method: 'get', params })
+  request<UserListResponse>({
+    ...config,
+    url: '/users/list',
+    method: 'get',
+    params
+  })
 
 /** 查询用户下拉选项；仅返回 userId、username、accountStatus。 */
 export const queryUserSelectList = (
   params: QueryUserSelectListRequest = {},
-  config: UserQueryConfig = {}
+  config: ApiQueryConfig = {}
 ): Promise<ApiResponse<UserListResponse<UserSelectItem>>> =>
   request<UserListResponse<UserSelectItem>>({
     ...config,
@@ -82,11 +88,19 @@ export const queryUserSelectList = (
 
 /** 创建用户。 */
 export const createUser = (data: CreateUserRequest): Promise<ApiResponse<UserListItem>> =>
-  request<UserListItem, CreateUserRequest>({ url: '/users/create', method: 'post', data })
+  request<UserListItem, CreateUserRequest>({
+    url: '/users/create',
+    method: 'post',
+    data
+  })
 
 /** 编辑用户资料和账号状态；重设密码或停用账号会撤销该用户的登录会话。 */
 export const updateUser = (data: UpdateUserRequest): Promise<ApiResponse<UserListItem>> =>
-  request<UserListItem, UpdateUserRequest>({ url: '/users/update', method: 'patch', data })
+  request<UserListItem, UpdateUserRequest>({
+    url: '/users/update',
+    method: 'patch',
+    data
+  })
 
 /** 更改账号状态；停用账号会撤销该用户的登录会话。 */
 export const updateUserAccountStatus = (

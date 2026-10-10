@@ -47,7 +47,7 @@ import type { Pinia } from 'pinia'
 import type { Router } from 'vue-router'
 import { useAuthStore } from '../stores'
 
-export function initApiClient(pinia: Pinia, router: Router) {
+export const initApiClient = (pinia: Pinia, router: Router) => {
   const authStore = useAuthStore(pinia)
   initRequest({
     baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
@@ -81,7 +81,7 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 
-const handleLogin = async () => {
+const submitLogin = async () => {
   loading.value = true
   try {
     const res = await login({
@@ -117,9 +117,12 @@ interface Customer {
   name: string
 }
 
-export function getCustomerById(id: string) {
-  return request<Customer>({ url: `/customer/${id}`, method: 'get' })
-}
+export const queryCustomerDetail = (customerId: string) =>
+  request<Customer>({
+    url: '/customer/detail',
+    method: 'get',
+    params: { customerId }
+  })
 ```
 
 ## API 列表
@@ -152,16 +155,16 @@ await changePassword({ currentPassword, newPassword })
 
 从 `@common-crm/api` 或应用的 `services` 统一入口导入：
 
-| 方法                      | 接口                               | 用途                           |
-| ------------------------- | ---------------------------------- | ------------------------------ |
-| `queryUserList`           | `GET /users/list`                  | 关键词、账号状态筛选及可选分页 |
-| `queryUserSelectList`     | `GET /users/selectList`            | 按用户名搜索下拉选项及可选分页 |
+| 方法                      | 接口                               | 用途                              |
+| ------------------------- | ---------------------------------- | --------------------------------- |
+| `queryUserList`           | `GET /users/list`                  | 关键词、账号状态筛选及可选分页    |
+| `queryUserSelectList`     | `GET /users/selectList`            | 按用户名搜索下拉选项及可选分页    |
 | `queryUsersOnlineStatus`  | `GET /users/onlineStatus`          | 批量查询最多 100 个用户的在线状态 |
-| `createUser`              | `POST /users/create`               | 创建用户                       |
-| `updateUser`              | `PATCH /users/update`              | 编辑用户名、邮箱、密码         |
-| `updateUserAccountStatus` | `PATCH /users/updateAccountStatus` | 启用或停用账号                 |
-| `deleteUser`              | `DELETE /users/delete`             | 单个删除                       |
-| `batchDeleteUsers`        | `DELETE /users/batchDelete`        | 批量删除                       |
+| `createUser`              | `POST /users/create`               | 创建用户                          |
+| `updateUser`              | `PATCH /users/update`              | 编辑用户名、邮箱、密码            |
+| `updateUserAccountStatus` | `PATCH /users/updateAccountStatus` | 启用或停用账号                    |
+| `deleteUser`              | `DELETE /users/delete`             | 单个删除                          |
+| `batchDeleteUsers`        | `DELETE /users/batchDelete`        | 批量删除                          |
 
 ```typescript
 import { queryUserList, queryUserSelectList, updateUser, batchDeleteUsers } from '@common-crm/api'
@@ -259,79 +262,49 @@ try {
 
 ## 扩展新模块
 
+### 封装规范
+
+- 导入顺序统一为公共契约类型、请求能力、客户端类型；公共契约从 `@common-crm/types/api` 导入，不在模块内重复声明。
+- 使用具名导出的语义化箭头函数，并添加简短的接口用途注释。直接转发请求使用表达式函数体；需要构造 FormData 或检查文件响应时保留函数块。
+- 业务接口显式声明 `Promise<ApiResponse<T>>`；`request<T, D>` 中 `T` 是业务响应数据，`D` 是 JSON 或 FormData 请求体类型。二进制读取使用 `requestRaw`，例如头像加载返回 `Promise<Blob>`。
+- 普通查询复用 `ApiQueryConfig`，可选配置放在业务参数之后；无业务参数时配置作为唯一参数。请求对象先展开配置，再依次填写 `url`、`method`、`params` 或 `data` 及接口专用选项。
+- 心跳和在线状态轮询只开放 `signal`，固定关闭进度条；上传开放取消、进度回调、超时及进度条配置。这些接口的专用行为不套用普通查询配置。
+- 请求对象使用多行格式。查询参数放在 `params`，写操作参数放在 `data`；接口路径遵循后端的 `/资源/动作` 约定。
+- 模块通过 `modules/index.ts` 统一导出；既有调用签名保持稳定，不为格式统一变更业务参数或请求行为。
+
 ### 1. 创建模块文件
 
-在 `packages/api/src/modules/` 中创建新的模块文件（如 `customer.ts`）。下面是扩展示例，需要后端实现对应接口：
+在 `packages/api/src/modules/` 中创建模块文件，并先在 `packages/types/src/api/` 维护公开请求和响应契约。下面用已有的用户接口展示统一写法：
 
 ```typescript
-import type { ApiResponse, PageRequest, PageResponse } from '../types'
+import type {
+  CreateUserRequest,
+  QueryUserListRequest,
+  UserListItem,
+  UserListResponse
+} from '@common-crm/types/api'
 import { request } from '../core'
+import type { ApiQueryConfig, ApiResponse } from '../types'
 
-/**
- * 客户信息
- */
-export interface Customer {
-  customerId: string
-  name: string
-  email: string
-  phone?: string
-}
-
-/**
- * 获取客户列表
- */
-export function getCustomerList(params: PageRequest): Promise<ApiResponse<PageResponse<Customer>>> {
-  return request({
-    url: '/customer',
+/** 查询用户列表；省略分页参数时查询全部匹配用户。 */
+export const queryUserList = (
+  params: QueryUserListRequest = {},
+  config: ApiQueryConfig = {}
+): Promise<ApiResponse<UserListResponse>> =>
+  request<UserListResponse>({
+    ...config,
+    url: '/users/list',
     method: 'get',
     params
   })
-}
 
-/**
- * 获取客户详情
- */
-export function getCustomerById(id: string): Promise<ApiResponse<Customer>> {
-  return request({
-    url: `/customer/${id}`,
-    method: 'get'
-  })
-}
-
-/**
- * 创建客户
- */
-export function createCustomer(data: Partial<Customer>): Promise<ApiResponse<Customer>> {
-  return request({
-    url: '/customer',
+/** 创建用户。 */
+export const createUser = (data: CreateUserRequest): Promise<ApiResponse<UserListItem>> =>
+  request<UserListItem, CreateUserRequest>({
+    url: '/users/create',
     method: 'post',
     data
   })
-}
-
-/**
- * 更新客户
- */
-export function updateCustomer(
-  id: string,
-  data: Partial<Customer>
-): Promise<ApiResponse<Customer>> {
-  return request({
-    url: `/customer/${id}`,
-    method: 'put',
-    data
-  })
-}
-
-/**
- * 删除客户
- */
-export function deleteCustomer(id: string): Promise<ApiResponse<void>> {
-  return request({
-    url: `/customer/${id}`,
-    method: 'delete'
-  })
-}
 ```
 
 ### 2. 在 index.ts 中导出
@@ -339,19 +312,19 @@ export function deleteCustomer(id: string): Promise<ApiResponse<void>> {
 ```typescript
 // packages/api/src/modules/index.ts
 export * from './auth'
-export * from './customer' // 新增
+export * from './users'
 ```
 
 ### 3. 在应用中使用
 
 ```typescript
-import { getCustomerList, createCustomer } from '@/services'
+import { queryUserList, createUser } from '@common-crm/api'
 
-// 获取客户列表
-const res = await getCustomerList({ page: 1, pageSize: 10 })
+// 查询用户列表
+const res = await queryUserList({ page: 1, pageSize: 10 })
 
-// 创建客户
-await createCustomer({ name: '张三', email: 'zhangsan@example.com' })
+// 创建用户
+await createUser({ username: 'zhangsan', password: 'password123', email: 'zhangsan@example.com' })
 ```
 
 ## 环境变量

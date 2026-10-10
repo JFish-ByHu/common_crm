@@ -1,6 +1,6 @@
 import type { UploadedFile, UploadFileOptions } from '@common-crm/types/api'
 import { ApiError, request, requestRaw } from '../core'
-import type { ApiRequestConfig } from '../types'
+import type { ApiRequestConfig, ApiResponse } from '../types'
 
 export type { FileCategory, UploadedFile, UploadFileOptions } from '@common-crm/types/api'
 
@@ -26,7 +26,7 @@ export const uploadFile = (
   file: File,
   options: UploadFileOptions = {},
   config: Pick<ApiRequestConfig, 'signal' | 'onUploadProgress' | 'timeout' | 'showProgress'> = {}
-) => {
+): Promise<ApiResponse<UploadedFile>> => {
   const data = new FormData()
   data.append('category', options.category ?? 'file')
   data.append('file', file)

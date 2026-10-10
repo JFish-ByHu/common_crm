@@ -23,6 +23,9 @@ export interface ApiRequestConfig<D = unknown> extends AxiosRequestConfig<D> {
   retryOnUnavailable?: boolean
 }
 
+/** 业务查询允许调用方控制取消和进度条，不开放接口路径及请求方法。 */
+export type ApiQueryConfig = Pick<ApiRequestConfig, 'signal' | 'showProgress'>
+
 export type ApiErrorKind = 'business' | 'http' | 'network' | 'timeout' | 'protocol' | 'unknown'
 
 export type { ApiResponse, PageRequest, PageResponse } from '@common-crm/types/api'
